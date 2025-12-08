@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "./dist",
+    "module": "ESNext",
+    "target": "ES2022",
+    "moduleResolution": "node",
+    "allowImportingTsExtensions": false,
+    "verbatimModuleSyntax": false,
+    "erasableSyntaxOnly": false,
+    "types": []
+  },
+  "include": ["src/lib/**/*"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "**/*.d.ts"]
+}
