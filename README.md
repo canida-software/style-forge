@@ -17,7 +17,7 @@ npm install @maplibre/maplibre-gl-style-spec
 
 ## API Philosophy
 
-**🎯 Fluent API First** – The fluent, chainable API is the recommended way to use Style Forge. Static helpers are still available for compatibility, but new code should prefer the fluent style.
+**🎯 Fluent API First** – The fluent, chainable API is the recommended way to use Style Forge.
 
 ```typescript
 // ✅ Recommended: Fluent API
@@ -33,7 +33,7 @@ const colorByCategory = get('category').match()
 ## Usage
 
 ```typescript
-import { get, has, match, interpolate, when, zoom, Layer } from 'style-forge';
+import { get, has, match, interpolate, when, zoom, Layer, $let, $var } from 'style-forge';
 
 // Data-driven color based on feature properties - fluent API
 const colorByCategory = get('category').match()
@@ -80,11 +80,16 @@ const adaptiveSize = when(zoom().gt(12))
   .then(get('area').multiply(0.01).add(5))
   .else(8);
 
-
 const buildingLayer = new Layer('fill', 'buildings', 'map-data', 'buildings')
   .fillColor(smartColor.build())
   .fillOpacity(interpolate(['linear'], zoom(), 10, 0.3, 18, 0.9).build())
   .visibility('visible');
+
+// Derived values with scoped variables using $let / $var
+const scaledDensity = $let(
+  { pop: get('population'), area: get('area') },
+  ({ pop, area }) => $var({ scaledDensity: pop.divide(area).multiply(100) }),
+);
 
 
 // Complex conditional with large color palettes
@@ -117,28 +122,52 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 
 ### Fluent Expression API
 
-**Basic Expressions:**
-- `get(property)` - Get a feature property
-- `zoom()` - Get current zoom level
-- `literal(value)` - Create a literal value
+**Basic Expressions**
+- `get(property)`, `has(property)` – feature access and existence.
+- `zoom()` – current zoom level.
+- `literal(value)` – literal values.
+- `globalState(key)` – read from global state.
+- `elevation()` – terrain elevation expression.
 
-**Type System Expressions:**
-- `toColor(value)` - Convert value to color type
-- `string(value)`, `number(value)`, `boolean(value)`, `array(value)`, `object(value)` - Type assertions
-- `typeOf(value)` - Get the type of a value as a string
-- `coalesce(...values)` - Return first non-null value
+**Conditionals & Match**
+- `when(condition).then(value).else(value)` – fluent conditional builder.
+- `conditional(condition)` – alias for `when`.
+- `match(input).branches({...}).fallback(value)` – match expressions with branches.
 
-**Conditional & Logic:**
-- `when(condition).then(value).else(value)` - Conditional expressions
-- `match(input).branches({...}).fallback(value)` - Match expressions
+**Variable Bindings**
+- `$let(bindings, varFn?)` / `Expression.let(...)` – scoped variable bindings using MapLibre `let`.
+- `$var(name)` / `Expression.var(name)` – reference a bound variable.
 
-**Mathematical:**
-- `add(...values)`, `subtract(a, b)`, `multiply(...values)`, `divide(a, b)` - Arithmetic
-- `mod(a, b)`, `pow(base, exponent)` - Modulo and power
+**Mathematics & Constants**
+- Static helpers: `add(...)`, `subtract(a,b)`, `multiply(...)`, `divide(a,b)`, `mod(a,b)`, `pow(a,b)`.
+- Fluent math: `expr.add(...)`, `expr.subtract(...)`, `expr.multiply(...)`, `expr.divide(...)`, `expr.mod(...)`, `expr.pow(...)`.
+- Extra fluent math: `expr.sqrt()`, `expr.log10()`.
+- Constants: `pi()`, `e()`, `ln2()`.
 
-**Interpolation:**
-- `interpolate(['linear'], input, ...stops)` - Interpolation functions
-- `step(input, min, ...stops)` - Step functions
+**Comparison & Logic**
+- Comparisons: `eq(a,b)`, `neq(a,b)`, `gt(a,b)`, `gte(a,b)`, `lt(a,b)`, `lte(a,b)` or fluent `expr.eq(...)`, etc.
+- Logic: `and(...)`, `or(...)`, `not(expr)` and fluent `expr.and(...)`, `expr.or(...)`.
+
+**Type Conversion & Assertions**
+- Conversions: `toNumber(value)`, `toString(value)`, `toBoolean(value)`, `toColor(value)` or fluent `expr.toNumber()`, etc.
+- Assertions: `string(value)`, `number(value)`, `boolean(value)`, `array(value)`, `object(value)` or fluent `expr.string()`, `expr.array('string')`, etc.
+- Type checks: `typeOf(value)` / fluent `expr.typeof()`.
+- Null handling: `coalesce(...values)` / fluent `expr.coalesce(...)`.
+
+**Advanced Type & Formatting**
+- `collator(options?)` – locale-aware string comparison configuration.
+- `format(...parts)` – rich text formatting.
+- Fluent helpers: `expr.image()` for sprite references, `expr.numberFormat(options)` for localized numbers, `expr.resolvedLocale()`, `expr.isSupportedScript()`.
+
+**Strings & Lookups**
+- String helpers: `concat(...values)`, `upcase(value)`, `downcase(value)` or fluent `expr.concat(...)`, `expr.upcase()`, `expr.downcase()`.
+- Lookups (fluent only): `expr.length()`, `expr.at(index)`, `expr.slice(start, end?)`, `expr.in(collection)`, `expr.indexOf(item, fromIndex?)`.
+
+**Interpolation & Stepping**
+- Static interpolation: `interpolate(interpolation, input, ...stops)` – e.g. `interpolate(['linear'], zoom(), 0, 0.1, 20, 1.0)`.
+- Fluent interpolation: `expr.interpolate(interpolation, ...stops)`, plus color-space variants `expr.interpolateHcl(...)`, `expr.interpolateLab(...)`.
+- Static steps: `step(input, min, ...stops)`.
+- Fluent steps: `expr.step(min, ...stops)`.
 
 ### Layer Builder
 
