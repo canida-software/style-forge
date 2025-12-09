@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Layer, match, get, interpolate, zoom, when, has } from '../lib/index';
+import { Layer, match, get, interpolate, zoom, when, has } from 'style-forge';
 
 describe('Layer Builder - Basic Layer Creation', () => {
   it('should create a fill layer with basic properties', () => {

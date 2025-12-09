@@ -10,5 +10,5 @@ export default defineConfig({
     pool: 'threads',
     poolOptions: { threads: { singleThread: true } },
   },
-  resolve: { alias: { '@': resolve(__dirname, './src') } },
+  resolve: { alias: { '@': resolve(__dirname, './src'), 'style-forge': resolve(__dirname, './src/lib/index.ts') } },
 });

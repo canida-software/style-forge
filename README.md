@@ -17,10 +17,10 @@ npm install @maplibre/maplibre-gl-style-spec
 
 ## API Philosophy
 
-**🎯 Fluent API Only** - Static API methods will be deprecated and removed for the best developer experience. Chainable methods provide superior readability and ergonomics.
+**🎯 Fluent API First** – The fluent, chainable API is the recommended way to use Style Forge. Static helpers are still available for compatibility, but new code should prefer the fluent style.
 
 ```typescript
-// ✅ ONLY: Fluent API - the sole supported approach
+// ✅ Recommended: Fluent API
 const colorByCategory = get('category').match()
   .branches({
     residential: '#ffeb3b',
@@ -28,19 +28,12 @@ const colorByCategory = get('category').match()
     industrial: '#f44336'
   })
   .fallback('#9e9e9e');
-
-// ❌ DEPRECATED: Static API - will be removed in future versions
-// const colorByCategory = match(get('category'), {
-//   residential: '#ffeb3b',
-//   commercial: '#2196f3',
-//   industrial: '#f44336'
-// }, '#9e9e9e');
 ```
 
 ## Usage
 
 ```typescript
-import { get, match, interpolate, when, zoom, Layer } from 'style-forge';
+import { get, has, match, interpolate, when, zoom, Layer } from 'style-forge';
 
 // Data-driven color based on feature properties - fluent API
 const colorByCategory = get('category').match()
@@ -87,23 +80,30 @@ const adaptiveSize = when(zoom().gt(12))
   .then(get('area').multiply(0.01).add(5))
   .else(8);
 
+
 const buildingLayer = new Layer('fill', 'buildings', 'map-data', 'buildings')
   .fillColor(smartColor.build())
   .fillOpacity(interpolate(['linear'], zoom(), 10, 0.3, 18, 0.9).build())
   .visibility('visible');
 
+
 // Complex conditional with large color palettes
+const palette = [
+  '#ff0000',
+  '#00ff00',
+  '#0000ff',
+  // ...
+];
 const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source', 'buildings')
   .fillColor(
     when(has('id'))
       .then(
-        match(get('id').toNumber().mod(256))
-          .branches({
-            0: '#ff0000', 1: '#00ff00', 2: '#0000ff', 3: '#ffff00',
-            4: '#ff00ff', 5: '#00ffff', 6: '#800080', 7: '#ffa500',
-            8: '#a52a2a', 9: '#808080', 10: '#000080', 11: '#008000',
-            // ...
-          })
+        match(get('id').toNumber().mod(palette.length))
+          .branches(
+            Object.fromEntries(
+              palette.map((color, index) => [index, color] as const),
+            ),
+          )
           .fallback('#64748b')
       )
       .else('#64748b')
@@ -152,9 +152,6 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 
 ```bash
 # Build the library
-npm run build:lib
-
-# Build everything (library + demo)
 npm run build
 ```
 

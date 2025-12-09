@@ -36,7 +36,7 @@ import {
   $let,
   $var,
   elevation,
-} from '../lib/index';
+} from 'style-forge';
 
 describe('Expression Builder - Basic Expressions', () => {
   it('should create get expressions', () => {
