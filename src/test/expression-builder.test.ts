@@ -9,6 +9,9 @@ import {
   interpolate,
   add,
   multiply,
+  pi,
+  e,
+  ln2,
   eq,
   gt,
   gte,
@@ -76,6 +79,22 @@ describe('Expression Builder - Mathematical Expressions', () => {
   it('should create power expressions', () => {
     const expr = get('level').pow(2);
     expect(expr.build()).toEqual(['^', ['get', 'level'], 2]);
+  });
+
+  it('should create square root expressions', () => {
+    const expr = get('area').sqrt();
+    expect(expr.build()).toEqual(['sqrt', ['get', 'area']]);
+  });
+
+  it('should create log10 expressions', () => {
+    const expr = get('magnitude').log10();
+    expect(expr.build()).toEqual(['log10', ['get', 'magnitude']]);
+  });
+
+  it('should create mathematical constants', () => {
+    expect(pi().build()).toEqual(['pi']);
+    expect(e().build()).toEqual(['e']);
+    expect(ln2().build()).toEqual(['ln2']);
   });
 });
 

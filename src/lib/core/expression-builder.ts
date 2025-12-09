@@ -361,6 +361,19 @@ export class Expression {
     ]);
   }
 
+  // Mathematical constants
+  static e(): Expression {
+    return new Expression(['e']);
+  }
+
+  static pi(): Expression {
+    return new Expression(['pi']);
+  }
+
+  static ln2(): Expression {
+    return new Expression(['ln2']);
+  }
+
   // Comparison operations
   static eq(a: any, b: any): Expression {
     return new Expression(['==', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
@@ -515,6 +528,14 @@ export class Expression {
 
   pow(exponent: number | Expression | ExpressionSpecification): Expression {
     return new Expression(['^', this.build(), exponent instanceof Expression ? exponent.build() : exponent]);
+  }
+
+  sqrt(): Expression {
+    return new Expression(['sqrt', this.build()]);
+  }
+
+  log10(): Expression {
+    return new Expression(['log10', this.build()]);
   }
 
   // Comparison operations as chainable methods

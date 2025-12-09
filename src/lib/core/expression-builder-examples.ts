@@ -47,6 +47,11 @@ export const mathExpressions = {
   // Power function
   power: Expression.pow(2, 8), // 2^8 = 256
 
+  // Mathematical constants (accessed via static methods since they don't chain)
+  pi: Expression.pi(), // π ≈ 3.14159
+  e: Expression.e(), // e ≈ 2.71828
+  ln2: Expression.ln2(), // ln(2) ≈ 0.69315
+
   // Complex calculation: (id % 256) + zoom
   complex: Expression.add(Expression.mod(Expression.toNumber(Expression.get('id')), 256), Expression.zoom()),
 
@@ -59,6 +64,11 @@ export const mathExpressions = {
   powerChain: Expression.get('level').pow(2).add(Expression.get('bonus')),
 
   moduloChain: Expression.get('id').toNumber().mod(10).multiply(25).add(50),
+
+  // Square root and logarithm chaining
+  sqrtChain: Expression.get('area').sqrt().multiply(2),
+
+  log10Chain: Expression.get('magnitude').log10().add(1).divide(2),
 };
 
 // ============================================================================
@@ -464,6 +474,10 @@ export const directImportExamples = {
 
   // Fluent chaining with direct imports
   chainedMath: get('magnitude').toNumber().multiply(10).add(5).divide(2),
+
+  // New math expressions with fluent API
+  sqrtExample: get('area').sqrt(),
+  log10Example: get('magnitude').log10(),
 
   // Match expressions with direct imports
   directMatch: match(get('category'))

@@ -30,6 +30,11 @@ export const divide = Expression.divide;
 export const mod = Expression.mod;
 export const pow = Expression.pow;
 
+// Mathematical constants
+export const pi = Expression.pi;
+export const e = Expression.e;
+export const ln2 = Expression.ln2;
+
 // Comparison operations
 export const eq = Expression.eq;
 export const neq = Expression.neq;
