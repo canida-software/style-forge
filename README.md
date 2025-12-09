@@ -5,22 +5,15 @@ A type-safe MapLibre style expression builder for TypeScript.
 ## Installation
 
 ```bash
-npm install style-forge
+npm install git+https://github.com/canida/style-forge.git#dist
 ```
 
-Or from a git repository:
-
-```bash
-npm install git+https://github.com/canida/style-forge.git
-```
-
-## Peer Dependencies
-
-This library requires `@maplibre/maplibre-gl-style-spec` as a peer dependency:
+Note: This installs the pre-built version from the `dist` branch. Ensure you have the peer dependency installed:
 
 ```bash
 npm install @maplibre/maplibre-gl-style-spec
 ```
+
 
 ## API Philosophy
 

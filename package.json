@@ -2,7 +2,7 @@
   "name": "style-forge",
   "version": "0.1.0",
   "description": "Type-safe MapLibre style expression builder",
-  "author": "Canida",
+  "author": "Quoc Duong Bui",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/canida/style-forge.git"
