@@ -30,22 +30,34 @@ jobs:
           cp package.json deploy/
           cp README.md deploy/
           cd deploy
-          # Adjust package.json for dist branch layout
-          npm pkg set main=index.js
-          npm pkg set types=index.d.ts
+          # Rewrite package.json for dist branch layout
+          node - << 'NODE'
+          const fs = require('fs');
 
-          # Ensure only built files are shipped
-          npm pkg set 'files[0]'='core/**/*'
-          npm pkg set 'files[1]'='index.*'
-          npm pkg set 'files[2]'='README.md'
+          const pkgPath = 'package.json';
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
 
-          # Reset exports to point at root index
-          npm pkg delete exports || true
-          npm pkg set 'exports.".".types'='./index.d.ts'
-          npm pkg set 'exports.".".import'='./index.js'
+          // Adjust entrypoints for root layout
+          pkg.main = 'index.js';
+          pkg.types = 'index.d.ts';
 
-          npm pkg delete scripts
-          npm pkg delete devDependencies
+          // Only ship built artifacts
+          pkg.files = ['core/**/*', 'index.*', 'README.md'];
+
+          // Clean dev-only fields
+          delete pkg.scripts;
+          delete pkg.devDependencies;
+
+          // Proper exports map for bundlers/TypeScript
+          pkg.exports = {
+            '.': {
+              types: './index.d.ts',
+              import: './index.js',
+            },
+          };
+
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+          NODE
 
       - name: Deploy to dist branch
         uses: JamesIves/github-pages-deploy-action@v4
