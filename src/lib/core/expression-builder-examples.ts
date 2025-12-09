@@ -490,6 +490,42 @@ export const layerBuilders = {
 };
 
 // ============================================================================
+// ADVANCED TYPE EXPRESSIONS
+// ============================================================================
+
+export const advancedTypeExpressions = {
+  // Collator for locale-aware string comparison
+  collatorDefault: Expression.collator(),
+  collatorCaseSensitive: Expression.collator({ 'case-sensitive': true }),
+  collatorLocale: Expression.collator({ locale: 'fr-FR' }),
+  collatorFull: Expression.collator({ 'case-sensitive': false, 'diacritic-sensitive': true, locale: 'de-DE' }),
+
+  // Image references for sprite images
+  imageDynamic: get('iconName').image(),
+  imageLiteral: literal('marker-icon').image(),
+
+  // Number formatting with localization
+  numberFormatDynamic: get('price').numberFormat({ locale: 'en-US', currency: 'USD' }),
+  numberFormatLiteral: literal(1234.56).numberFormat({ locale: 'de-DE' }),
+  numberFormatPrecision: literal(123.456789).numberFormat({ 'min-fraction-digits': 2, 'max-fraction-digits': 4 }),
+
+  // Rich text formatting
+  formatSimple: Expression.format('Hello', ' ', 'World'),
+  formatWithData: Expression.format('Population: ', get('population'), ' people'),
+  formatWithFormatting: Expression.format('Price: ', { 'text-color': '#ff0000', 'font-scale': 1.2 }),
+  formatComplex: Expression.format('Area: ', get('area').numberFormat({ locale: 'en-US' }), ' sq km', {
+    'text-color': '#0066cc',
+    'font-scale': 0.8,
+    'vertical-align': 'bottom',
+  }),
+  formatWithFont: Expression.format('Warning: ', {
+    'text-color': '#ff6600',
+    'text-font': Expression.literal(['Arial Bold']),
+    'font-scale': 1.1,
+  }),
+};
+
+// ============================================================================
 // DIRECT IMPORTS - Ergonomic usage without Expression. prefix
 // ============================================================================
 

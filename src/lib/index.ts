@@ -68,6 +68,10 @@ export const typeOf = Expression.typeof;
 // Type system
 export const coalesce = Expression.coalesce;
 
+// Advanced type expressions
+export const collator = Expression.collator;
+export const format = Expression.format;
+
 // String operations
 export const concat = Expression.concat;
 export const upcase = Expression.upcase;

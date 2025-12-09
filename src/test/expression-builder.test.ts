@@ -31,6 +31,8 @@ import {
   upcase,
   downcase,
   globalState,
+  collator,
+  format,
 } from '../lib/index';
 
 describe('Expression Builder - Basic Expressions', () => {
@@ -431,5 +433,121 @@ describe('Expression Builder - Lookup Expressions', () => {
     expect(globalThis.testUtils.validateExpression(expr1.build())).toBe(true);
     expect(globalThis.testUtils.validateExpression(expr2.build())).toBe(true);
     expect(globalThis.testUtils.validateExpression(expr3.build())).toBe(true);
+  });
+});
+
+describe('Expression Builder - Advanced Type Expressions', () => {
+  it('should create collator expressions with no options', () => {
+    const expr = collator();
+    expect(expr.build()).toEqual(['collator']);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create collator expressions with case-sensitive option', () => {
+    const expr = collator({ 'case-sensitive': true });
+    expect(expr.build()).toEqual(['collator', { 'case-sensitive': true }]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create collator expressions with diacritic-sensitive option', () => {
+    const expr = collator({ 'diacritic-sensitive': false });
+    expect(expr.build()).toEqual(['collator', { 'diacritic-sensitive': false }]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create collator expressions with locale option', () => {
+    const expr = collator({ locale: 'en-US' });
+    expect(expr.build()).toEqual(['collator', { locale: 'en-US' }]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create collator expressions with all options', () => {
+    const expr = collator({ 'case-sensitive': true, 'diacritic-sensitive': false, locale: 'fr-FR' });
+    expect(expr.build()).toEqual([
+      'collator',
+      { 'case-sensitive': true, 'diacritic-sensitive': false, locale: 'fr-FR' },
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create collator expressions with expression options', () => {
+    const expr = collator({ 'case-sensitive': get('caseSensitive'), locale: get('userLocale') });
+    expect(expr.build()).toEqual([
+      'collator',
+      { 'case-sensitive': ['get', 'caseSensitive'], locale: ['get', 'userLocale'] },
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should chain image expressions', () => {
+    const expr = get('iconName').image();
+    expect(expr.build()).toEqual(['image', ['get', 'iconName']]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should chain numberFormat expressions', () => {
+    const expr = get('population').numberFormat({ locale: 'en-US' });
+    expect(expr.build()).toEqual(['number-format', ['get', 'population'], { locale: 'en-US' }]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should chain numberFormat expressions with currency', () => {
+    const expr = get('price').numberFormat({ locale: 'en-US', currency: 'USD' });
+    expect(expr.build()).toEqual(['number-format', ['get', 'price'], { locale: 'en-US', currency: 'USD' }]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should chain numberFormat expressions with fraction digits', () => {
+    const expr = literal(123.456789).numberFormat({ 'min-fraction-digits': 2, 'max-fraction-digits': 4 });
+    expect(expr.build()).toEqual([
+      'number-format',
+      ['literal', 123.456789],
+      { 'min-fraction-digits': 2, 'max-fraction-digits': 4 },
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create format expressions with simple strings', () => {
+    const expr = format('Hello', ' ', 'World');
+    expect(expr.build()).toEqual(['format', 'Hello', ' ', 'World']);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create format expressions with expressions', () => {
+    const expr = format(get('greeting'), ' ', get('name'));
+    expect(expr.build()).toEqual(['format', ['get', 'greeting'], ' ', ['get', 'name']]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create format expressions with formatted sections', () => {
+    const expr = format('Price: ', { 'text-color': '#ff0000', 'font-scale': 1.2 });
+    expect(expr.build()).toEqual(['format', 'Price: ', { 'text-color': '#ff0000', 'font-scale': 1.2 }]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create format expressions with complex formatting', () => {
+    const expr = format('Area: ', get('area').numberFormat({ locale: 'en-US' }), ' sq km', {
+      'text-color': '#0066cc',
+      'font-scale': 0.8,
+      'vertical-align': 'bottom',
+    });
+    expect(expr.build()).toEqual([
+      'format',
+      'Area: ',
+      ['number-format', ['get', 'area'], { locale: 'en-US' }],
+      ' sq km',
+      { 'text-color': '#0066cc', 'font-scale': 0.8, 'vertical-align': 'bottom' },
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create format expressions with text-font option', () => {
+    const expr = format('Warning: ', { 'text-color': '#ff6600', 'text-font': ['literal', ['Arial Bold']] });
+    expect(expr.build()).toEqual([
+      'format',
+      'Warning: ',
+      { 'text-color': '#ff6600', 'text-font': ['literal', ['Arial Bold']] },
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
   });
 });

@@ -464,6 +464,88 @@ export class Expression {
     return new Expression(['typeof', value instanceof Expression ? value.build() : value]);
   }
 
+  // Advanced type expressions
+  static collator(options?: {
+    'case-sensitive'?: boolean | Expression | ExpressionSpecification;
+    'diacritic-sensitive'?: boolean | Expression | ExpressionSpecification;
+    locale?: string | Expression | ExpressionSpecification;
+  }): Expression {
+    const args: any[] = ['collator'];
+    if (options) {
+      const collatorOptions: any = {};
+      if (options['case-sensitive'] !== undefined) {
+        collatorOptions['case-sensitive'] =
+          options['case-sensitive'] instanceof Expression
+            ? options['case-sensitive'].build()
+            : options['case-sensitive'];
+      }
+      if (options['diacritic-sensitive'] !== undefined) {
+        collatorOptions['diacritic-sensitive'] =
+          options['diacritic-sensitive'] instanceof Expression
+            ? options['diacritic-sensitive'].build()
+            : options['diacritic-sensitive'];
+      }
+      if (options.locale !== undefined) {
+        collatorOptions.locale = options.locale instanceof Expression ? options.locale.build() : options.locale;
+      }
+      args.push(collatorOptions);
+    }
+    return new Expression(args as ExpressionSpecification);
+  }
+
+  static format(
+    ...sections: (
+      | string
+      | Expression
+      | ExpressionSpecification
+      | {
+          'font-scale'?: number | Expression | ExpressionSpecification;
+          'text-font'?: Expression | ExpressionSpecification;
+          'text-color'?: string | Expression | ExpressionSpecification;
+          'vertical-align'?: 'bottom' | 'center' | 'top';
+        }
+    )[]
+  ): Expression {
+    const args: any[] = ['format'];
+    for (const section of sections) {
+      if (typeof section === 'string' || section instanceof Expression) {
+        args.push(section instanceof Expression ? section.build() : section);
+      } else if (section && typeof section === 'object' && !Array.isArray(section)) {
+        // This is a formatted section object
+        const formatSection = section as {
+          'font-scale'?: number | Expression | ExpressionSpecification;
+          'text-font'?: Expression | ExpressionSpecification;
+          'text-color'?: string | Expression | ExpressionSpecification;
+          'vertical-align'?: 'bottom' | 'center' | 'top';
+        };
+        const formattedSection: any = {};
+        if (formatSection['font-scale'] !== undefined) {
+          formattedSection['font-scale'] =
+            formatSection['font-scale'] instanceof Expression
+              ? formatSection['font-scale'].build()
+              : formatSection['font-scale'];
+        }
+        if (formatSection['text-font'] !== undefined) {
+          formattedSection['text-font'] =
+            formatSection['text-font'] instanceof Expression
+              ? formatSection['text-font'].build()
+              : formatSection['text-font'];
+        }
+        if (formatSection['text-color'] !== undefined) {
+          formattedSection['text-color'] =
+            formatSection['text-color'] instanceof Expression
+              ? formatSection['text-color'].build()
+              : formatSection['text-color'];
+        }
+        if (formatSection['vertical-align'] !== undefined) {
+          formattedSection['vertical-align'] = formatSection['vertical-align'];
+        }
+        args.push(formattedSection);
+      }
+    }
+    return new Expression(args as ExpressionSpecification);
+  }
+
   // String operations
   static concat(...values: (string | Expression)[]): Expression {
     const args = ['concat', ...values.map((v) => (v instanceof Expression ? v.build() : v))];
@@ -622,6 +704,43 @@ export class Expression {
 
   typeof(): Expression {
     return new Expression(['typeof', this.build()]);
+  }
+
+  // Advanced type expressions as chainable methods
+  image(): Expression {
+    return new Expression(['image', this.build()]);
+  }
+
+  numberFormat(options?: {
+    locale?: string | Expression | ExpressionSpecification;
+    currency?: string | Expression | ExpressionSpecification;
+    'min-fraction-digits'?: number | Expression | ExpressionSpecification;
+    'max-fraction-digits'?: number | Expression | ExpressionSpecification;
+  }): Expression {
+    const args: any[] = ['number-format', this.build()];
+    if (options) {
+      const formatOptions: any = {};
+      if (options.locale !== undefined) {
+        formatOptions.locale = options.locale instanceof Expression ? options.locale.build() : options.locale;
+      }
+      if (options.currency !== undefined) {
+        formatOptions.currency = options.currency instanceof Expression ? options.currency.build() : options.currency;
+      }
+      if (options['min-fraction-digits'] !== undefined) {
+        formatOptions['min-fraction-digits'] =
+          options['min-fraction-digits'] instanceof Expression
+            ? options['min-fraction-digits'].build()
+            : options['min-fraction-digits'];
+      }
+      if (options['max-fraction-digits'] !== undefined) {
+        formatOptions['max-fraction-digits'] =
+          options['max-fraction-digits'] instanceof Expression
+            ? options['max-fraction-digits'].build()
+            : options['max-fraction-digits'];
+      }
+      args.push(formatOptions);
+    }
+    return new Expression(args as ExpressionSpecification);
   }
 
   // String operations as chainable methods
