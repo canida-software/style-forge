@@ -100,7 +100,7 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 
 ## API
 
-### Fluid Expression API
+### Fluent Expression API
 
 - `get(property)` - Get a feature property
 - `zoom()` - Get current zoom level

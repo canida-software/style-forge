@@ -6,7 +6,7 @@
  */
 
 import { Expression, Property, Value, Layer } from './expression-builder';
-import { when, has, get, match, zoom, literal, interpolate } from './expression-builder';
+import { when, has, get, match, zoom, literal, interpolate } from '../index';
 
 // ============================================================================
 // BASIC EXPRESSIONS
@@ -127,20 +127,6 @@ export const matchExpressions = {
       // ... add more categories as needed ...
     })
     .fallback('#9e9e9e'),
-
-  // Traditional match expression
-  traditionalMatch: Expression.match(
-    Expression.mod(Expression.toNumber(Expression.get('id')), 3),
-    { 0: '#ff0000', 1: '#00ff00', 2: '#0000ff' },
-    '#64748b',
-  ),
-
-  // String-based match - traditional
-  categoryMatch: Expression.match(
-    Expression.get('category'),
-    { residential: '#ffeb3b', commercial: '#2196f3', industrial: '#f44336' },
-    '#9e9e9e',
-  ),
 };
 
 // ============================================================================
@@ -148,22 +134,8 @@ export const matchExpressions = {
 // ============================================================================
 
 export const conditionalExpressions = {
-  // Traditional case expression
-  traditionalCase: Expression.case(Expression.has('id'), '#ff0000', '#0000ff'),
-
   // When/Then/Else API
   simpleWhenThen: Expression.when(Expression.has('id')).then('#ff0000').else('#0000ff'),
-
-  // Nested conditional with match (complex example)
-  nestedCaseMatch: Expression.case(
-    Expression.has('id'),
-    Expression.match(
-      Expression.mod(Expression.toNumber(Expression.get('id')), 256),
-      { 0: '#ff0000', 1: '#00ff00', 2: '#0000ff' },
-      '#64748b',
-    ),
-    '#64748b',
-  ),
 
   // When/Then/Else API for nested expressions
   nestedWhenThen: Expression.when(Expression.has('id'))
@@ -173,13 +145,6 @@ export const conditionalExpressions = {
         .fallback('#64748b'),
     )
     .else('#64748b'),
-
-  // Multi-condition case
-  multiConditionCase: Expression.case(
-    Expression.and(Expression.has('id'), Expression.gt(Expression.zoom(), 10)),
-    Expression.interpolate(['linear'], Expression.zoom(), 10, '#ff0000', 15, '#00ff00'),
-    '#64748b',
-  ),
 
   // When/Then/Else API for complex conditions
   complexWhenThen: Expression.when(Expression.has('id').and(Expression.zoom().gt(10)))
@@ -323,11 +288,11 @@ export const valueBuilders = {
 // ============================================================================
 
 export const propertyBuilders = {
-  // Fill color with data-driven expression
-  fillColor: Property.match(
-    Expression.mod(Expression.toNumber(Expression.get('id')), 256),
-    { 0: '#ff0000', 1: '#00ff00', 2: '#0000ff' },
-    '#64748b',
+  // Fill color with data-driven expression using fluent API
+  fillColor: Property.expression<string>(
+    Expression.match(Expression.mod(Expression.toNumber(Expression.get('id')), 256))
+      .branches({ 0: '#ff0000', 1: '#00ff00', 2: '#0000ff' })
+      .fallback('#64748b'),
   ),
 
   // Opacity with interpolation
@@ -339,8 +304,8 @@ export const propertyBuilders = {
   // Line width based on zoom
   lineWidth: Property.interpolate(['linear'], Expression.zoom(), 0, 1, 20, 5),
 
-  // Text size with case logic
-  textSize: Property.case(Expression.gt(Expression.zoom(), 12), 14, 10),
+  // Text size with conditional logic using fluent API
+  textSize: Property.expression<number>(Expression.when(Expression.zoom().gt(12)).then(14).else(10)),
 };
 
 // ============================================================================
@@ -377,22 +342,20 @@ export const layerBuilders = {
     .fillOpacity(0.8)
     .visibility('visible'),
 
-  // Array-based large palettes
+  // Array-based large palettes using fluent API
   fillLayerColorPalette: new Layer('fill', 'buildings-palette', 'buildings-source', 'buildings')
     .fillColor(
       Property.expression<string>(
         Expression.when(Expression.has('id'))
           .then(
-            Expression.match(
-              Expression.mod(Expression.toNumber(Expression.get('id')), 256),
-              {
+            Expression.match(Expression.mod(Expression.toNumber(Expression.get('id')), 256))
+              .branches({
                 0: '#ff0000',
                 1: '#00ff00',
                 2: '#0000ff',
                 // ... 253 more colors programmatically generated ...
-              },
-              '#64748b',
-            ),
+              })
+              .fallback('#64748b'),
           )
           .else('#64748b'),
       ).build(),
@@ -450,7 +413,7 @@ export const directImportExamples = {
 
   // Comparison and conditional logic
   directComparison: get('value').eq(100),
-  directCase: when(has('id')).then('#ff0000').else('#0000ff'),
+  directWhenThen: when(has('id')).then('#ff0000').else('#0000ff'),
 
   // Interpolation with direct imports
   directInterpolate: interpolate(['linear'], zoom(), 0, 0.1, 20, 1.0),

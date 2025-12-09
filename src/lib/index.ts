@@ -1,42 +1,58 @@
+import { Expression } from './core/expression-builder';
+
+export { Expression } from './core/expression-builder';
 export { Value } from './core/expression-builder';
 export { ConditionalBuilder } from './core/expression-builder';
 export { ConditionalThenBuilder } from './core/expression-builder';
 export { MatchBuilder } from './core/expression-builder';
 export { MatchFallbackBuilder } from './core/expression-builder';
-export { Expression } from './core/expression-builder';
 export { Property } from './core/expression-builder';
 export { Layer } from './core/expression-builder';
 
-// Re-export utility functions
-export {
-  get,
-  has,
-  zoom,
-  literal,
-  when,
-  conditional,
-  match,
-  add,
-  subtract,
-  multiply,
-  divide,
-  mod,
-  pow,
-  eq,
-  neq,
-  gt,
-  gte,
-  lt,
-  lte,
-  and,
-  or,
-  not,
-  toNumber,
-  toString,
-  toBoolean,
-  concat,
-  upcase,
-  downcase,
-  interpolate,
-  step,
-} from './core/expression-builder';
+// Direct exports for ergonomic usage without Expression. prefix
+export const get = Expression.get;
+export const has = Expression.has;
+export const zoom = Expression.zoom;
+export const literal = Expression.literal;
+
+// Conditional expressions
+export const when = Expression.when;
+export const conditional = Expression.conditional; // alias for when
+
+// Match expressions
+export const match = Expression.match;
+
+// Mathematical operations
+export const add = Expression.add;
+export const subtract = Expression.subtract;
+export const multiply = Expression.multiply;
+export const divide = Expression.divide;
+export const mod = Expression.mod;
+export const pow = Expression.pow;
+
+// Comparison operations
+export const eq = Expression.eq;
+export const neq = Expression.neq;
+export const gt = Expression.gt;
+export const gte = Expression.gte;
+export const lt = Expression.lt;
+export const lte = Expression.lte;
+
+// Logical operations
+export const and = Expression.and;
+export const or = Expression.or;
+export const not = Expression.not;
+
+// Type conversion
+export const toNumber = Expression.toNumber;
+export const toString = Expression.toString;
+export const toBoolean = Expression.toBoolean;
+
+// String operations
+export const concat = Expression.concat;
+export const upcase = Expression.upcase;
+export const downcase = Expression.downcase;
+
+// Interpolation and stepping
+export const interpolate = Expression.interpolate;
+export const step = Expression.step;

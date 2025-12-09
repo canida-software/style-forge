@@ -284,34 +284,8 @@ export class Expression {
     return new Expression(['zoom']);
   }
 
-  static case(condition: Expression, trueValue: Expression | any, falseValue: Expression | any): Expression {
-    return new Expression([
-      'case',
-      condition.build(),
-      trueValue instanceof Expression ? trueValue.build() : trueValue,
-      falseValue instanceof Expression ? falseValue.build() : falseValue,
-    ]);
-  }
-
-  static match(input: Expression, branches: Record<string | number, any>, fallback: any): Expression;
-  static match(input: Expression | ExpressionSpecification): MatchBuilder;
-  static match(
-    input: Expression | ExpressionSpecification,
-    branches?: Record<string | number, any>,
-    fallback?: any,
-  ): Expression | MatchBuilder {
-    if (branches !== undefined && fallback !== undefined) {
-      // Traditional match with branches and fallback
-      const args: any[] = ['match', input instanceof Expression ? input.build() : input];
-      for (const [key, value] of Object.entries(branches)) {
-        const parsedKey = isNaN(Number(key)) ? key : Number(key);
-        args.push(parsedKey, value instanceof Expression ? value.build() : value);
-      }
-      args.push(fallback instanceof Expression ? fallback.build() : fallback);
-      return new Expression(args as ExpressionSpecification);
-    } else {
-      return new MatchBuilder(input);
-    }
+  static match(input: Expression | ExpressionSpecification): MatchBuilder {
+    return new MatchBuilder(input);
   }
 
   static interpolate(
@@ -625,19 +599,6 @@ export class Property<T> {
   }
 
   // Chainable methods for expressions
-  static case<T>(condition: Expression, trueValue: Expression | T, falseValue: Expression | T): Property<T> {
-    const expr = Expression.case(condition, trueValue, falseValue);
-    return Property.expression(expr);
-  }
-
-  static match<T>(
-    input: Expression,
-    branches: Record<string | number, T | Expression>,
-    fallback: T | Expression,
-  ): Property<T> {
-    const expr = Expression.match(input, branches, fallback);
-    return Property.expression(expr);
-  }
 
   static interpolate<T>(
     interpolation: InterpolationSpecification,
@@ -775,61 +736,3 @@ export class Layer {
     return this.layer;
   }
 }
-
-// ============================================================================
-// DIRECT EXPORTS - For ergonomic usage without Expression. prefix
-// ============================================================================
-
-/**
- * Direct exports for common expression functions
- * Allows usage like: when(condition).then(value) instead of Expression.when(condition).then(value)
- */
-
-// Core property access
-export const get = Expression.get;
-export const has = Expression.has;
-export const zoom = Expression.zoom;
-export const literal = Expression.literal;
-
-// Conditional expressions
-export const when = Expression.when;
-export const conditional = Expression.conditional; // alias for when
-// export const caseExpr = Expression.case; // renamed to avoid conflict with JS case
-
-// Match expressions
-export const match = Expression.match;
-
-// Mathematical operations
-export const add = Expression.add;
-export const subtract = Expression.subtract;
-export const multiply = Expression.multiply;
-export const divide = Expression.divide;
-export const mod = Expression.mod;
-export const pow = Expression.pow;
-
-// Comparison operations
-export const eq = Expression.eq;
-export const neq = Expression.neq;
-export const gt = Expression.gt;
-export const gte = Expression.gte;
-export const lt = Expression.lt;
-export const lte = Expression.lte;
-
-// Logical operations
-export const and = Expression.and;
-export const or = Expression.or;
-export const not = Expression.not;
-
-// Type conversion
-export const toNumber = Expression.toNumber;
-export const toString = Expression.toString;
-export const toBoolean = Expression.toBoolean;
-
-// String operations
-export const concat = Expression.concat;
-export const upcase = Expression.upcase;
-export const downcase = Expression.downcase;
-
-// Interpolation and stepping
-export const interpolate = Expression.interpolate;
-export const step = Expression.step;
