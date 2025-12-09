@@ -316,6 +316,12 @@ export class Expression {
     return new Expression(args as ExpressionSpecification);
   }
 
+  // Type system expressions
+  static coalesce(...values: (Expression | ExpressionSpecification | any)[]): Expression {
+    const args = ['coalesce', ...values.map((v) => (v instanceof Expression ? v.build() : v))];
+    return new Expression(args as ExpressionSpecification);
+  }
+
   // Mathematical operations
   static add(...values: (number | Expression)[]): Expression {
     const args = ['+', ...values.map((v) => (v instanceof Expression ? v.build() : v))];
@@ -398,6 +404,39 @@ export class Expression {
 
   static toBoolean(value: Expression | any): Expression {
     return new Expression(['to-boolean', value instanceof Expression ? value.build() : value]);
+  }
+
+  static toColor(value: Expression | string | any): Expression {
+    return new Expression(['to-color', value instanceof Expression ? value.build() : value]);
+  }
+
+  // Type assertions
+  static string(value: Expression | any): Expression {
+    return new Expression(['string', value instanceof Expression ? value.build() : value]);
+  }
+
+  static number(value: Expression | any): Expression {
+    return new Expression(['number', value instanceof Expression ? value.build() : value]);
+  }
+
+  static boolean(value: Expression | any): Expression {
+    return new Expression(['boolean', value instanceof Expression ? value.build() : value]);
+  }
+
+  static array(value: Expression | any, itemType?: string): Expression {
+    const args: any[] = ['array', value instanceof Expression ? value.build() : value];
+    if (itemType) {
+      args.splice(1, 0, itemType);
+    }
+    return new Expression(args as ExpressionSpecification);
+  }
+
+  static object(value: Expression | any): Expression {
+    return new Expression(['object', value instanceof Expression ? value.build() : value]);
+  }
+
+  static typeof(value: Expression | any): Expression {
+    return new Expression(['typeof', value instanceof Expression ? value.build() : value]);
   }
 
   // String operations
@@ -522,6 +561,39 @@ export class Expression {
     return new Expression(['to-boolean', this.build()]);
   }
 
+  toColor(): Expression {
+    return new Expression(['to-color', this.build()]);
+  }
+
+  // Type assertions as chainable methods
+  string(): Expression {
+    return new Expression(['string', this.build()]);
+  }
+
+  number(): Expression {
+    return new Expression(['number', this.build()]);
+  }
+
+  boolean(): Expression {
+    return new Expression(['boolean', this.build()]);
+  }
+
+  array(itemType?: string): Expression {
+    const args: any[] = ['array', this.build()];
+    if (itemType) {
+      args.splice(1, 0, itemType);
+    }
+    return new Expression(args as ExpressionSpecification);
+  }
+
+  object(): Expression {
+    return new Expression(['object', this.build()]);
+  }
+
+  typeof(): Expression {
+    return new Expression(['typeof', this.build()]);
+  }
+
   // String operations as chainable methods
   concat(...values: (string | Expression | ExpressionSpecification)[]): Expression {
     const args = ['concat', this.build(), ...values.map((v) => (v instanceof Expression ? v.build() : v))];
@@ -553,6 +625,12 @@ export class Expression {
   ): Expression {
     const args = ['step', this.build(), min instanceof Expression ? min.build() : min];
     args.push(...stops.map((stop) => (stop instanceof Expression ? stop.build() : stop)));
+    return new Expression(args as ExpressionSpecification);
+  }
+
+  // Type system expressions as chainable methods
+  coalesce(...values: (Expression | ExpressionSpecification | any)[]): Expression {
+    const args = ['coalesce', this.build(), ...values.map((v) => (v instanceof Expression ? v.build() : v))];
     return new Expression(args as ExpressionSpecification);
   }
 

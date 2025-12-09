@@ -47,6 +47,20 @@ export const not = Expression.not;
 export const toNumber = Expression.toNumber;
 export const toString = Expression.toString;
 export const toBoolean = Expression.toBoolean;
+export const toColor = Expression.toColor;
+
+// Type assertions
+export const string = Expression.string;
+export const number = Expression.number;
+export const boolean = Expression.boolean;
+export const array = Expression.array;
+export const object = Expression.object;
+
+// Type checking
+export const typeOf = Expression.typeof;
+
+// Type system
+export const coalesce = Expression.coalesce;
 
 // String operations
 export const concat = Expression.concat;

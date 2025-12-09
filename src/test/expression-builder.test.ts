@@ -16,6 +16,14 @@ import {
   not,
   toNumber,
   toString,
+  toColor,
+  string,
+  number,
+  boolean,
+  array,
+  object,
+  typeOf,
+  coalesce,
   concat,
   upcase,
   downcase,
@@ -195,6 +203,63 @@ describe('Expression Builder - Type Conversion Expressions', () => {
   it('should chain type conversion with other operations', () => {
     const expr = get('id').toNumber().mod(256);
     expect(expr.build()).toEqual(['%', ['to-number', ['get', 'id']], 256]);
+  });
+});
+
+describe('Expression Builder - Type System Expressions', () => {
+  it('should create to-color expressions', () => {
+    const expr = toColor('red');
+    expect(expr.build()).toEqual(['to-color', 'red']);
+  });
+
+  it('should create string type assertion expressions', () => {
+    const expr = string(get('name'));
+    expect(expr.build()).toEqual(['string', ['get', 'name']]);
+  });
+
+  it('should create number type assertion expressions', () => {
+    const expr = number(get('count'));
+    expect(expr.build()).toEqual(['number', ['get', 'count']]);
+  });
+
+  it('should create boolean type assertion expressions', () => {
+    const expr = boolean(get('visible'));
+    expect(expr.build()).toEqual(['boolean', ['get', 'visible']]);
+  });
+
+  it('should create array type assertion expressions', () => {
+    const expr = array(get('tags'));
+    expect(expr.build()).toEqual(['array', ['get', 'tags']]);
+  });
+
+  it('should create array type assertion expressions with item type', () => {
+    const expr = array(get('tags'), 'string');
+    expect(expr.build()).toEqual(['array', 'string', ['get', 'tags']]);
+  });
+
+  it('should create object type assertion expressions', () => {
+    const expr = object(get('metadata'));
+    expect(expr.build()).toEqual(['object', ['get', 'metadata']]);
+  });
+
+  it('should create typeof expressions', () => {
+    const expr = typeOf(get('value'));
+    expect(expr.build()).toEqual(['typeof', ['get', 'value']]);
+  });
+
+  it('should create coalesce expressions', () => {
+    const expr = coalesce(get('primaryColor'), get('secondaryColor'), '#64748b');
+    expect(expr.build()).toEqual(['coalesce', ['get', 'primaryColor'], ['get', 'secondaryColor'], '#64748b']);
+  });
+
+  it('should chain type system expressions', () => {
+    const expr = get('color').toColor();
+    expect(expr.build()).toEqual(['to-color', ['get', 'color']]);
+  });
+
+  it('should chain type assertions', () => {
+    const expr = get('tags').array('string');
+    expect(expr.build()).toEqual(['array', 'string', ['get', 'tags']]);
   });
 });
 

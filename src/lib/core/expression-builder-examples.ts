@@ -247,6 +247,23 @@ export const typeConversionExpressions = {
 
   // Convert to boolean
   toBoolean: Expression.toBoolean(Expression.get('visible')),
+
+  // Convert to color
+  toColor: Expression.toColor('red'),
+
+  // Type assertions (ensure value is of specific type)
+  assertString: Expression.string(Expression.get('name')),
+  assertNumber: Expression.number(Expression.get('count')),
+  assertBoolean: Expression.boolean(Expression.get('visible')),
+  assertArray: Expression.array(Expression.get('tags')),
+  assertArrayOfStrings: Expression.array(Expression.get('tags'), 'string'),
+  assertObject: Expression.object(Expression.get('metadata')),
+
+  // Type checking
+  checkType: Expression.typeof(Expression.get('value')),
+
+  // Coalesce - return first non-null value
+  coalesceValue: Expression.coalesce(Expression.get('primaryColor'), Expression.get('secondaryColor'), '#64748b'),
 };
 
 // ============================================================================

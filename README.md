@@ -102,12 +102,28 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 
 ### Fluent Expression API
 
+**Basic Expressions:**
 - `get(property)` - Get a feature property
 - `zoom()` - Get current zoom level
 - `literal(value)` - Create a literal value
+
+**Type System Expressions:**
+- `toColor(value)` - Convert value to color type
+- `string(value)`, `number(value)`, `boolean(value)`, `array(value)`, `object(value)` - Type assertions
+- `typeOf(value)` - Get the type of a value as a string
+- `coalesce(...values)` - Return first non-null value
+
+**Conditional & Logic:**
 - `when(condition).then(value).else(value)` - Conditional expressions
-- `interpolate(['linear'], input, ...stops)` - Interpolation functions
 - `match(input).branches({...}).fallback(value)` - Match expressions
+
+**Mathematical:**
+- `add(...values)`, `subtract(a, b)`, `multiply(...values)`, `divide(a, b)` - Arithmetic
+- `mod(a, b)`, `pow(base, exponent)` - Modulo and power
+
+**Interpolation:**
+- `interpolate(['linear'], input, ...stops)` - Interpolation functions
+- `step(input, min, ...stops)` - Step functions
 
 ### Layer Builder
 
