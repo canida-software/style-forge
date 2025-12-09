@@ -713,4 +713,77 @@ describe('Expression Builder - Variable Binding Expressions', () => {
       ['var', 'density'],
     ]);
   });
+
+  describe('Spatial Operations', () => {
+    describe('distance', () => {
+      it('should create distance expression with coordinate array', () => {
+        const point: GeoJSON.Point = { type: 'Point', coordinates: [-74.5, 40] };
+        const expr = get('feature').distance(point);
+        expect(expr.build()).toEqual(['distance', point]);
+        expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+      });
+
+      it('should create distance expression with expression point', () => {
+        const pointExpr = literal({ type: 'Point', coordinates: [-74.5, 40] });
+        const expr = get('feature').distance(pointExpr);
+        expect(expr.build()).toEqual(['distance', ['literal', { type: 'Point', coordinates: [-74.5, 40] }]]);
+        expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+      });
+    });
+
+    describe('within', () => {
+      it('should create within expression with GeoJSON polygon', () => {
+        const polygon: GeoJSON.Polygon = {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0],
+            ],
+          ],
+        };
+        const expr = get('feature').within(polygon);
+        expect(expr.build()).toEqual(['within', polygon]);
+        expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+      });
+
+      it('should create within expression with expression polygon', () => {
+        const polygonExpr = literal({
+          type: 'Polygon',
+          coordinates: [
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+              [0, 0],
+            ],
+          ],
+        });
+        const expr = get('feature').within(polygonExpr);
+        expect(expr.build()).toEqual([
+          'within',
+          [
+            'literal',
+            {
+              type: 'Polygon',
+              coordinates: [
+                [
+                  [0, 0],
+                  [1, 0],
+                  [1, 1],
+                  [0, 1],
+                  [0, 0],
+                ],
+              ],
+            },
+          ],
+        ]);
+        expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+      });
+    });
+  });
 });

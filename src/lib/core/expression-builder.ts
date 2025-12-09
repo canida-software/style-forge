@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { GeoJSON } from 'geojson';
+
 import type {
   ExpressionSpecification,
   DataDrivenPropertyValueSpecification,
@@ -915,6 +917,34 @@ export class Expression {
   coalesce(...values: (Expression | ExpressionSpecification | any)[]): Expression {
     const args = ['coalesce', this.build(), ...values.map((v) => (v instanceof Expression ? v.build() : v))];
     return new Expression(args as ExpressionSpecification);
+  }
+
+  // theoretically correct signature: distance(geojson: GeoJSON.GeoJSON | Expression | ExpressionSpecification): Expression
+  // but to conform to style spec typing and better DX, we use
+  distance(geojson: GeoJSON | Expression | ExpressionSpecification): Expression {
+    let geojsonExpr: ExpressionSpecification | GeoJSON.GeoJSON;
+    if (geojson instanceof Expression) {
+      geojsonExpr = geojson.build();
+    } else if (Array.isArray(geojson)) {
+      geojsonExpr = geojson;
+    } else {
+      geojsonExpr = geojson;
+    }
+    return new Expression(['distance', geojsonExpr] as ExpressionSpecification);
+  }
+
+  // theoretically correct signature: distance(geojson: GeoJSON.GeoJSON | Expression | ExpressionSpecification): Expression
+  // but to conform to style spec typing and better DX, we use
+  within(geojson: GeoJSON | Expression | ExpressionSpecification): Expression {
+    let geojsonExpr: ExpressionSpecification | GeoJSON.GeoJSON;
+    if (geojson instanceof Expression) {
+      geojsonExpr = geojson.build();
+    } else if (Array.isArray(geojson)) {
+      geojsonExpr = geojson;
+    } else {
+      geojsonExpr = geojson;
+    }
+    return new Expression(['within', geojsonExpr] as ExpressionSpecification);
   }
 
   // Build the final expression
