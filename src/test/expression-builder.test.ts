@@ -33,6 +33,8 @@ import {
   globalState,
   collator,
   format,
+  $let,
+  $var,
 } from '../lib/index';
 
 describe('Expression Builder - Basic Expressions', () => {
@@ -549,5 +551,166 @@ describe('Expression Builder - Advanced Type Expressions', () => {
       { 'text-color': '#ff6600', 'text-font': ['literal', ['Arial Bold']] },
     ]);
     expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+});
+
+describe('Expression Builder - Variable Binding Expressions', () => {
+  it('should create var expressions', () => {
+    const expr = $var('myVariable');
+    expect(expr.build()).toEqual(['var', 'myVariable']);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create let expressions with single binding', () => {
+    const expr = $let({ population: get('population') }).in(get('area'));
+    expect(expr.build()).toEqual(['let', 'population', ['get', 'population'], ['get', 'area']]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create let expressions with multiple bindings', () => {
+    const expr = $let({
+      population: get('population'),
+      area: get('area'),
+      density: get('population').divide(get('area')),
+    }).in($var('density'));
+    expect(expr.build()).toEqual([
+      'let',
+      'population',
+      ['get', 'population'],
+      'area',
+      ['get', 'area'],
+      'density',
+      ['/', ['get', 'population'], ['get', 'area']],
+      ['var', 'density'],
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create let expressions with literal values', () => {
+    const expr = $let({ baseSize: 10, multiplier: 2 }).in($var('baseSize').multiply($var('multiplier')));
+    expect(expr.build()).toEqual([
+      'let',
+      'baseSize',
+      10,
+      'multiplier',
+      2,
+      ['*', ['var', 'baseSize'], ['var', 'multiplier']],
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create complex let expressions with calculations', () => {
+    const expr = $let({
+      pop: get('population'),
+      areaKm2: get('area').multiply(0.000001), // Convert to km²
+      density: get('population').divide(get('area').multiply(0.000001)),
+    }).in(interpolate(['linear'], $var('density'), 0, '#f7fbff', 100, '#08306b'));
+    expect(expr.build()).toEqual([
+      'let',
+      'pop',
+      ['get', 'population'],
+      'areaKm2',
+      ['*', ['get', 'area'], 0.000001],
+      'density',
+      ['/', ['get', 'population'], ['*', ['get', 'area'], 0.000001]],
+      ['interpolate', ['linear'], ['var', 'density'], 0, '#f7fbff', 100, '#08306b'],
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should handle let expressions with nested expressions', () => {
+    const expr = $let({ category: get('type'), isResidential: get('type').eq('residential') }).in(
+      when($var('isResidential')).then('#ffeb3b').else('#64748b'),
+    );
+    expect(expr.build()).toEqual([
+      'let',
+      'category',
+      ['get', 'type'],
+      'isResidential',
+      ['==', ['get', 'type'], 'residential'],
+      ['case', ['var', 'isResidential'], '#ffeb3b', '#64748b'],
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should support functional syntax for let expressions', () => {
+    const expr = $let({ population: get('population'), area: get('area') }, ({ population, area }) =>
+      $var({ density: population.divide(area) }),
+    );
+    expect(expr.build()).toEqual([
+      'let',
+      'population',
+      ['get', 'population'],
+      'area',
+      ['get', 'area'],
+      'density',
+      ['/', ['get', 'population'], ['get', 'area']],
+      ['var', 'density'],
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should support functional syntax with multiple computed bindings', () => {
+    const expr = $let({ pop: get('population'), area: get('area') }, ({ pop, area }) =>
+      $var({ density: pop.divide(area), scaledDensity: pop.divide(area).multiply(100) }),
+    );
+    expect(expr.build()).toEqual([
+      'let',
+      'pop',
+      ['get', 'population'],
+      'area',
+      ['get', 'area'],
+      'density',
+      ['/', ['get', 'population'], ['get', 'area']],
+      'scaledDensity',
+      ['*', ['/', ['get', 'population'], ['get', 'area']], 100],
+      ['var', 'scaledDensity'],
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should enforce VarBindings type safety - users must use $var', () => {
+    // This would cause a TypeScript error if uncommented:
+    // $let({ pop: get('population') }, ({ pop }) => ({
+    //   density: pop.multiply(2)  // Error: plain object not assignable to VarBindings
+    // }));
+
+    // Only this works:
+    const expr = $let({ pop: get('population') }, ({ pop }) => $var({ pop2: pop.multiply(2) }));
+    expect(expr.build()).toEqual([
+      'let',
+      'pop',
+      ['get', 'population'],
+      'pop2',
+      ['*', ['get', 'population'], 2],
+      ['var', 'pop2'],
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should demonstrate overloaded $var - variable reference vs variable binding', () => {
+    // $var(string) - reference a variable
+    const varRef = $var('density');
+    expect(varRef.build()).toEqual(['var', 'density']);
+
+    // $var(object) - create variable bindings (used in varFn)
+    const bindings = $var({ density: get('population').divide(get('area')) });
+    expect(bindings.__brand).toBe('VarBindings');
+    expect(bindings.bindings).toEqual({ density: get('population').divide(get('area')) });
+
+    // Combined usage in $let
+    const expr = $let({ pop: get('population'), area: get('area') }, ({ pop, area }) =>
+      $var({ density: pop.divide(area) }),
+    );
+    expect(expr.build()).toEqual([
+      'let',
+      'pop',
+      ['get', 'population'],
+      'area',
+      ['get', 'area'],
+      'density',
+      ['/', ['get', 'population'], ['get', 'area']],
+      ['var', 'density'],
+    ]);
   });
 });

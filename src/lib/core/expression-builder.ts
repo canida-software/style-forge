@@ -260,6 +260,51 @@ export class MatchFallbackBuilder {
   }
 }
 
+/**
+ * Builder for let expressions with variable binding
+ * Supports fluent API for creating variable-scoped expressions
+ */
+export class LetBuilder {
+  private bindings: Record<string, Expression | ExpressionSpecification | any>;
+
+  constructor(bindings: Record<string, Expression | ExpressionSpecification | any>) {
+    this.bindings = bindings;
+  }
+
+  /**
+   * Builds the final let expression with the provided result expression
+   */
+  in(resultExpression: Expression | ExpressionSpecification | any): Expression {
+    const letExpr: any[] = ['let'];
+
+    // Add all variable bindings as alternating name-value pairs
+    for (const [name, value] of Object.entries(this.bindings)) {
+      letExpr.push(name);
+      const valueSpec = value instanceof Expression ? value.build() : value;
+      letExpr.push(valueSpec);
+    }
+
+    // Add the final expression
+    const resultSpec = resultExpression instanceof Expression ? resultExpression.build() : resultExpression;
+    letExpr.push(resultSpec);
+
+    return new Expression(letExpr as ExpressionSpecification);
+  }
+}
+
+// ============================================================================
+// VARIABLE BINDINGS - Opaque type for type-safe let expressions
+// ============================================================================
+
+/**
+ * Opaque type for variable bindings that can only be created through the $bind function.
+ * This prevents arbitrary object construction in varFn callbacks.
+ */
+export type VarBindings = {
+  readonly __brand: 'VarBindings';
+  readonly bindings: Record<string, Expression | ExpressionSpecification | any>;
+};
+
 // ============================================================================
 // EXPRESSION BUILDER - Core fluent API for MapLibre expressions
 // ============================================================================
@@ -294,6 +339,60 @@ export class Expression {
 
   static globalState(property: string): Expression {
     return new Expression(['global-state', property]);
+  }
+
+  // Variable binding expressions
+  static var(variableName: string): Expression;
+  static var<T extends Record<string, Expression | ExpressionSpecification | any>>(bindings: T): VarBindings;
+  static var<T extends Record<string, Expression | ExpressionSpecification | any>>(
+    arg: string | T,
+  ): Expression | VarBindings {
+    if (typeof arg === 'string') {
+      // Reference a variable
+      return new Expression(['var', arg]);
+    } else {
+      // Create variable bindings
+      return { __brand: 'VarBindings' as const, bindings: arg };
+    }
+  }
+
+  static let<T extends Record<string, Expression | ExpressionSpecification | any>>(bindings: T): LetBuilder;
+  static let<T extends Record<string, Expression | ExpressionSpecification | any>>(
+    bindings: T,
+    varFn: (boundVars: T) => VarBindings,
+  ): Expression;
+  static let<T extends Record<string, Expression | ExpressionSpecification | any>>(
+    bindings: T,
+    varFn?: (boundVars: T) => VarBindings,
+  ): LetBuilder | Expression {
+    if (varFn) {
+      // Functional syntax: compute additional bindings and return final expression
+      const result = varFn(bindings);
+      const additionalBindings = result.bindings;
+
+      // Combine initial and additional bindings
+      const allBindings = { ...bindings, ...additionalBindings };
+
+      // Build let expression
+      const letExpr: any[] = ['let'];
+      for (const [name, value] of Object.entries(allBindings)) {
+        const valueSpec = value instanceof Expression ? value.build() : value;
+        letExpr.push(name, valueSpec);
+      }
+
+      // Return reference to the last additional binding (or last initial if no additional)
+      const resultKeys = Object.keys(additionalBindings);
+      const resultKey =
+        resultKeys.length > 0
+          ? resultKeys[resultKeys.length - 1]
+          : Object.keys(bindings)[Object.keys(bindings).length - 1];
+
+      letExpr.push(['var', resultKey]);
+      return new Expression(letExpr as ExpressionSpecification);
+    } else {
+      // Builder pattern: return LetBuilder for .in() chaining
+      return new LetBuilder(bindings);
+    }
   }
 
   static match(input: Expression | ExpressionSpecification): MatchBuilder {

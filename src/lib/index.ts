@@ -6,6 +6,8 @@ export { ConditionalBuilder } from './core/expression-builder';
 export { ConditionalThenBuilder } from './core/expression-builder';
 export { MatchBuilder } from './core/expression-builder';
 export { MatchFallbackBuilder } from './core/expression-builder';
+export { LetBuilder } from './core/expression-builder';
+export type { VarBindings } from './core/expression-builder';
 export { Property } from './core/expression-builder';
 export { Layer } from './core/expression-builder';
 
@@ -22,6 +24,10 @@ export const conditional = Expression.conditional; // alias for when
 
 // Match expressions
 export const match = Expression.match;
+
+// Variable binding expressions
+export const $let = Expression.let;
+export const $var = Expression.var;
 
 // Mathematical operations
 export const add = Expression.add;
