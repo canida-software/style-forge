@@ -1,4 +1,4 @@
-name: Deploy to dist branch
+name: Deploy
 
 on:
   push:
