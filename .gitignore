@@ -21,6 +21,9 @@ yarn-error.log*
 .vite/
 .eslintcache
 
+# Coverage directory used by tools like istanbul
+coverage/
+
 # TypeScript
 *.tsbuildinfo
 
