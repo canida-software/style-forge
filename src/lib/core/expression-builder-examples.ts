@@ -239,31 +239,34 @@ export const stepExpressions = {
 // ============================================================================
 
 export const typeConversionExpressions = {
-  // Convert to number
-  stringToNumber: Expression.toNumber(Expression.get('id')),
+  // ✅ ONLY: Fluent API for all type operations
 
-  // Convert to string
-  numberToString: Expression.toString(Expression.get('count')),
+  // Type conversions - fluent API
+  idAsNumber: Expression.get('id').toNumber(),
+  countAsString: Expression.get('count').toString(),
+  visibleAsBoolean: Expression.get('visible').toBoolean(),
+  colorValue: Expression.literal('red').toColor(),
 
-  // Convert to boolean
-  toBoolean: Expression.toBoolean(Expression.get('visible')),
+  // Type assertions (ensure value is of specific type) - fluent API
+  nameAsString: Expression.get('name').string(),
+  countAsNumber: Expression.get('count').number(),
+  visibleAsBooleanTyped: Expression.get('visible').boolean(),
+  tagsAsArray: Expression.get('tags').array(),
+  tagsAsStringArray: Expression.get('tags').array('string'), // typed array
+  metadataAsObject: Expression.get('metadata').object(),
 
-  // Convert to color
-  toColor: Expression.toColor('red'),
+  // Type checking - fluent API
+  valueType: Expression.get('value').typeof(),
 
-  // Type assertions (ensure value is of specific type)
-  assertString: Expression.string(Expression.get('name')),
-  assertNumber: Expression.number(Expression.get('count')),
-  assertBoolean: Expression.boolean(Expression.get('visible')),
-  assertArray: Expression.array(Expression.get('tags')),
-  assertArrayOfStrings: Expression.array(Expression.get('tags'), 'string'),
-  assertObject: Expression.object(Expression.get('metadata')),
+  // Coalesce - fluent API for robust fallbacks
+  primaryColorOrDefault: Expression.get('primaryColor').coalesce(Expression.get('secondaryColor'), '#64748b'),
+  nameOrPlaceholder: Expression.get('name').coalesce('Unknown'),
 
-  // Type checking
-  checkType: Expression.typeof(Expression.get('value')),
-
-  // Coalesce - return first non-null value
-  coalesceValue: Expression.coalesce(Expression.get('primaryColor'), Expression.get('secondaryColor'), '#64748b'),
+  // Advanced fluent type operations
+  safeProcessing: Expression.get('userInput')
+    .coalesce('default') // fallback
+    .toString() // ensure string
+    .string(), // assert string type
 };
 
 // ============================================================================
@@ -277,6 +280,45 @@ export const stringExpressions = {
   // Case conversion
   uppercase: Expression.upcase(Expression.get('name')),
   lowercase: Expression.downcase(Expression.get('name')),
+};
+
+// ============================================================================
+// LOOKUP EXPRESSIONS - FLUENT API ONLY
+// ============================================================================
+
+export const lookupExpressions = {
+  // ✅ ONLY: Fluent API for all lookup operations
+
+  // Length of strings and arrays - use fluent API
+  nameLength: Expression.get('name').length(),
+  tagsLength: Expression.get('tags').length(),
+
+  // Check if value exists in array or string - fluent API
+  hasImportantTag: Expression.literal('important').in(Expression.get('tags')),
+  containsLetterA: Expression.literal('a').in(Expression.get('name')),
+
+  // Access elements by index (0-based) - fluent API
+  firstTag: Expression.get('tags').at(0),
+  firstNameChar: Expression.get('name').at(0),
+
+  // Extract substrings/subarrays - fluent API
+  namePrefix: Expression.get('name').slice(0, 3),
+  firstTwoTags: Expression.get('tags').slice(0, 2),
+  nameFromThirdChar: Expression.get('name').slice(2), // from index 2 to end
+
+  // Complex fluent expressions - this is where fluent API shines
+  conditionalSlice: Expression.when(Expression.get('name').length().gt(5))
+    .then(Expression.get('name').slice(0, 5).concat('...'))
+    .else(Expression.get('name')),
+
+  tagBasedColor: Expression.when(Expression.literal('urgent').in(Expression.get('tags')))
+    .then('#ff0000')
+    .else('#0000ff'),
+
+  // Advanced fluent chaining
+  processTags: Expression.get('tags')
+    .slice(0, 3) // take first 3 tags
+    .concat(Expression.get('categories').slice(0, 2)), // add first 2 categories
 };
 
 // ============================================================================

@@ -47,6 +47,8 @@ export class Value<T> {
 /**
  * MapLibre Expression Builder - Complete Type-Safe API for MapLibre Expressions
  *
+ * 🎯 FLUENT API IS THE RECOMMENDED APPROACH - Use chainable methods for better ergonomics!
+ *
  * This builder system provides:
  * 1. Expression - Core fluent API for all expression types
  * 2. Property - For DataDrivenPropertyValueSpecification properties
@@ -54,7 +56,16 @@ export class Value<T> {
  * 4. Layer - For complete layer specifications
  *
  * @example
- * // Basic match expression (replaces createMatchExpression)
+ * // ✅ RECOMMENDED: Fluent API - more readable and ergonomic
+ * const expr = Expression.get('id')
+ *   .toNumber()
+ *   .mod(256)
+ *   .match()
+ *   .branches({ 0: '#ff0000', 1: '#00ff00', 2: '#0000ff' })
+ *   .fallback('#64748b');
+ *
+ * @example
+ * // ❌ AVOID: Static API - less ergonomic (still supported for compatibility)
  * const expr = Expression.match(
  *   Expression.mod(Expression.toNumber(Expression.get('id')), 256),
  *   { 0: '#ff0000', 1: '#00ff00', 2: '#0000ff' },
@@ -62,23 +73,20 @@ export class Value<T> {
  * );
  *
  * @example
- * // Complex nested expression with case/match
- * const complexExpr = Expression.case(
- *   Expression.has('id'),
- *   Expression.match(
- *     Expression.mod(Expression.toNumber(Expression.get('id')), 256),
- *     { 0: '#ff0000', 1: '#00ff00' },
- *     '#64748b'
- *   ),
- *   '#64748b'
- * );
+ * // Complex fluent expression - this is where fluent API shines
+ * const complexExpr = Expression.when(Expression.has('id'))
+ *   .then(Expression.get('category').match()
+ *     .branches({ residential: '#ffeb3b', commercial: '#2196f3' })
+ *     .fallback('#64748b'))
+ *   .else('#64748b');
  *
  * @example
- * // Using Property for layer properties
- * const fillColor = Property.match(
- *   Expression.mod(Expression.toNumber(Expression.get('id')), 256),
- *   { 0: '#ff0000', 1: '#00ff00' },
- *   '#64748b'
+ * // Using Property for layer properties - fluent API
+ * const fillColor = Property.expression(
+ *   Expression.get('id').toNumber().mod(256)
+ *     .match()
+ *     .branches({ 0: '#ff0000', 1: '#00ff00' })
+ *     .fallback('#64748b')
  * );
  *
  * @example
@@ -86,7 +94,7 @@ export class Value<T> {
  * const visibility = Value.literal<'visible' | 'none'>('visible');
  *
  * @example
- * // Using Layer for complete layers
+ * // Using Layer for complete layers - fluent API
  * const layer = new Layer('fill', 'my-layer', 'my-source', 'my-layer')
  *   .fillColor(fillColor.build())
  *   .fillOpacity(0.8)
@@ -453,14 +461,11 @@ export class Expression {
     return new Expression(['upcase', value instanceof Expression ? value.build() : value]);
   }
 
-  // Array operations
-  static arrayLength(value: Expression): Expression {
-    return new Expression(['length', value.build()]);
-  }
-
   // ============================================================================
-  // FLUENT CHAINING METHODS (Prisma/Drizzle-inspired)
+  // FLUENT CHAINING METHODS (Prisma/Drizzle-inspired) - RECOMMENDED API
   // ============================================================================
+  // These chainable methods provide the most ergonomic and readable API.
+  // Prefer these over static methods for better developer experience.
 
   /**
    * Starts a conditional expression builder with when/then/else
@@ -606,6 +611,30 @@ export class Expression {
 
   upcase(): Expression {
     return new Expression(['upcase', this.build()]);
+  }
+
+  // Lookup operations as chainable methods
+  length(): Expression {
+    return new Expression(['length', this.build()]);
+  }
+
+  at(index: number | Expression | ExpressionSpecification): Expression {
+    return new Expression(['at', index instanceof Expression ? index.build() : index, this.build()]);
+  }
+
+  slice(
+    start: number | Expression | ExpressionSpecification,
+    end?: number | Expression | ExpressionSpecification,
+  ): Expression {
+    const args: any[] = ['slice', this.build(), start instanceof Expression ? start.build() : start];
+    if (end !== undefined) {
+      args.push(end instanceof Expression ? end.build() : end);
+    }
+    return new Expression(args as ExpressionSpecification);
+  }
+
+  in(collection: string | Expression | ExpressionSpecification): Expression {
+    return new Expression(['in', this.build(), collection instanceof Expression ? collection.build() : collection]);
   }
 
   // Interpolation as chainable method

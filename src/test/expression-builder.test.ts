@@ -335,3 +335,45 @@ describe('Expression Builder - Complex Real-World Examples', () => {
     expect(result[3]).toBe('#64748b');
   });
 });
+
+describe('Expression Builder - Lookup Expressions', () => {
+  it('should chain length expressions', () => {
+    const expr = get('name').length();
+    expect(expr.build()).toEqual(['length', ['get', 'name']]);
+  });
+
+  it('should chain at expressions', () => {
+    const expr = get('tags').at(0);
+    expect(expr.build()).toEqual(['at', 0, ['get', 'tags']]);
+  });
+
+  it('should chain slice expressions', () => {
+    const expr = get('name').slice(0, 3);
+    expect(expr.build()).toEqual(['slice', ['get', 'name'], 0, 3]);
+  });
+
+  it('should chain slice expressions with only start', () => {
+    const expr = get('name').slice(2);
+    expect(expr.build()).toEqual(['slice', ['get', 'name'], 2]);
+  });
+
+  it('should chain in expressions', () => {
+    const expr = literal('important').in(get('tags'));
+    expect(expr.build()).toEqual(['in', ['literal', 'important'], ['get', 'tags']]);
+  });
+
+  it('should create complex chained lookup expressions', () => {
+    const expr = get('fullName').slice(0, get('fullName').length().divide(2));
+    expect(expr.build()).toEqual(['slice', ['get', 'fullName'], 0, ['/', ['length', ['get', 'fullName']], 2]]);
+  });
+
+  it('should create conditional expressions with lookup operations', () => {
+    const expr = when(get('tags').length().gt(0)).then(get('tags').at(0)).else('default');
+    expect(expr.build()).toEqual([
+      'case',
+      ['>', ['length', ['get', 'tags']], 0],
+      ['at', 0, ['get', 'tags']],
+      'default',
+    ]);
+  });
+});

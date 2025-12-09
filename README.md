@@ -22,13 +22,35 @@ This library requires `@maplibre/maplibre-gl-style-spec` as a peer dependency:
 npm install @maplibre/maplibre-gl-style-spec
 ```
 
+## API Philosophy
+
+**🎯 Fluent API Only** - Static API methods will be deprecated and removed for the best developer experience. Chainable methods provide superior readability and ergonomics.
+
+```typescript
+// ✅ ONLY: Fluent API - the sole supported approach
+const colorByCategory = get('category').match()
+  .branches({
+    residential: '#ffeb3b',
+    commercial: '#2196f3',
+    industrial: '#f44336'
+  })
+  .fallback('#9e9e9e');
+
+// ❌ DEPRECATED: Static API - will be removed in future versions
+// const colorByCategory = match(get('category'), {
+//   residential: '#ffeb3b',
+//   commercial: '#2196f3',
+//   industrial: '#f44336'
+// }, '#9e9e9e');
+```
+
 ## Usage
 
 ```typescript
-import { match, get, interpolate, when, zoom, Layer } from 'style-forge';
+import { get, match, interpolate, when, zoom, Layer } from 'style-forge';
 
-// Data-driven color based on feature properties
-const colorByCategory = match(get('category'))
+// Data-driven color based on feature properties - fluent API
+const colorByCategory = get('category').match()
   .branches({
     residential: '#ffeb3b',
     commercial: '#2196f3',
