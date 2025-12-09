@@ -30,10 +30,20 @@ jobs:
           cp package.json deploy/
           cp README.md deploy/
           cd deploy
+          # Adjust package.json for dist branch layout
           npm pkg set main=index.js
           npm pkg set types=index.d.ts
-          npm pkg set 'exports.".".types'=./index.d.ts
-          npm pkg set 'exports.".".import'=./index.js
+
+          # Ensure only built files are shipped
+          npm pkg set 'files[0]'='core/**/*'
+          npm pkg set 'files[1]'='index.*'
+          npm pkg set 'files[2]'='README.md'
+
+          # Reset exports to point at root index
+          npm pkg delete exports || true
+          npm pkg set 'exports.".".types'='./index.d.ts'
+          npm pkg set 'exports.".".import'='./index.js'
+
           npm pkg delete scripts
           npm pkg delete devDependencies
 

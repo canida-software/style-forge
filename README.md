@@ -5,7 +5,7 @@ A type-safe MapLibre style expression builder for TypeScript.
 ## Installation
 
 ```bash
-npm install git+https://github.com/canida/style-forge.git#dist
+npm install git+https://github.com/canida-software/style-forge.git#dist
 ```
 
 Note: This installs the pre-built version from the `dist` branch. Ensure you have the peer dependency installed:
