@@ -316,6 +316,11 @@ export const lookupExpressions = {
   firstTwoTags: Expression.get('tags').slice(0, 2),
   nameFromThirdChar: Expression.get('name').slice(2), // from index 2 to end
 
+  // Find position of items in arrays/strings - fluent API
+  urgentTagIndex: Expression.get('tags').indexOf('urgent'),
+  letterPosition: Expression.get('name').indexOf('a'),
+  searchFromIndex: Expression.get('tags').indexOf('important', 1), // start search from index 1
+
   // Complex fluent expressions - this is where fluent API shines
   conditionalSlice: Expression.when(Expression.get('name').length().gt(5))
     .then(Expression.get('name').slice(0, 5).concat('...'))
@@ -329,6 +334,32 @@ export const lookupExpressions = {
   processTags: Expression.get('tags')
     .slice(0, 3) // take first 3 tags
     .concat(Expression.get('categories').slice(0, 2)), // add first 2 categories
+};
+
+// ============================================================================
+// GLOBAL STATE EXPRESSIONS
+// ============================================================================
+
+export const globalStateExpressions = {
+  // Access global state properties - static API since no chaining context
+  themeColor: Expression.globalState('theme'),
+  userPreferences: Expression.globalState('preferences'),
+  appConfig: Expression.globalState('config'),
+
+  // Use global state in conditional expressions
+  themeBasedColor: Expression.when(Expression.globalState('darkMode')).then('#ffffff').else('#000000'),
+
+  // Combine global state with feature data
+  dynamicSize: Expression.add(Expression.get('baseSize'), Expression.globalState('sizeMultiplier')),
+
+  // Global state in match expressions
+  categoryColor: Expression.match(Expression.get('category'))
+    .branches({
+      residential: Expression.globalState('residentialColor'),
+      commercial: Expression.globalState('commercialColor'),
+      industrial: Expression.globalState('industrialColor'),
+    })
+    .fallback('#64748b'),
 };
 
 // ============================================================================

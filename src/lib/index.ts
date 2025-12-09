@@ -14,6 +14,7 @@ export const get = Expression.get;
 export const has = Expression.has;
 export const zoom = Expression.zoom;
 export const literal = Expression.literal;
+export const globalState = Expression.globalState;
 
 // Conditional expressions
 export const when = Expression.when;

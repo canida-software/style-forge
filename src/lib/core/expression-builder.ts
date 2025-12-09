@@ -292,6 +292,10 @@ export class Expression {
     return new Expression(['zoom']);
   }
 
+  static globalState(property: string): Expression {
+    return new Expression(['global-state', property]);
+  }
+
   static match(input: Expression | ExpressionSpecification): MatchBuilder {
     return new MatchBuilder(input);
   }
@@ -656,6 +660,17 @@ export class Expression {
 
   in(collection: string | Expression | ExpressionSpecification): Expression {
     return new Expression(['in', this.build(), collection instanceof Expression ? collection.build() : collection]);
+  }
+
+  indexOf(
+    item: any | Expression | ExpressionSpecification,
+    fromIndex?: number | Expression | ExpressionSpecification,
+  ): Expression {
+    const args: any[] = ['index-of', item instanceof Expression ? item.build() : item, this.build()];
+    if (fromIndex !== undefined) {
+      args.push(fromIndex instanceof Expression ? fromIndex.build() : fromIndex);
+    }
+    return new Expression(args as ExpressionSpecification);
   }
 
   // Interpolation as chainable method

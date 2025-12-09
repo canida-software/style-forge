@@ -56,6 +56,8 @@ globalThis.testUtils = {
       'to-string',
       'to-boolean',
       'concat',
+      'index-of',
+      'global-state',
     ];
 
     return typeof operator === 'string' && validOperators.includes(operator);

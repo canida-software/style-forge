@@ -30,6 +30,7 @@ import {
   concat,
   upcase,
   downcase,
+  globalState,
 } from '../lib/index';
 
 describe('Expression Builder - Basic Expressions', () => {
@@ -394,5 +395,41 @@ describe('Expression Builder - Lookup Expressions', () => {
       ['at', 0, ['get', 'tags']],
       'default',
     ]);
+  });
+
+  it('should chain indexOf expressions', () => {
+    const expr = get('tags').indexOf('important');
+    expect(expr.build()).toEqual(['index-of', 'important', ['get', 'tags']]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should chain indexOf expressions with fromIndex', () => {
+    const expr = get('tags').indexOf('important', 1);
+    expect(expr.build()).toEqual(['index-of', 'important', ['get', 'tags'], 1]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should chain indexOf expressions with expression fromIndex', () => {
+    const expr = get('tags').indexOf(get('searchTerm'), get('startIndex'));
+    expect(expr.build()).toEqual(['index-of', ['get', 'searchTerm'], ['get', 'tags'], ['get', 'startIndex']]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create globalState expressions', () => {
+    const expr = globalState('theme');
+    expect(expr.build()).toEqual(['global-state', 'theme']);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create globalState expressions with different property names', () => {
+    const expr1 = globalState('color');
+    const expr2 = globalState('size');
+    const expr3 = globalState('enabled');
+    expect(expr1.build()).toEqual(['global-state', 'color']);
+    expect(expr2.build()).toEqual(['global-state', 'size']);
+    expect(expr3.build()).toEqual(['global-state', 'enabled']);
+    expect(globalThis.testUtils.validateExpression(expr1.build())).toBe(true);
+    expect(globalThis.testUtils.validateExpression(expr2.build())).toBe(true);
+    expect(globalThis.testUtils.validateExpression(expr3.build())).toBe(true);
   });
 });
