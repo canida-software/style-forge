@@ -343,6 +343,10 @@ export class Expression {
     return new Expression(['global-state', property]);
   }
 
+  static elevation(): Expression {
+    return new Expression(['elevation']);
+  }
+
   // Variable binding expressions
   static var(variableName: string): Expression;
   static var<T extends Record<string, Expression | ExpressionSpecification | any>>(bindings: T): VarBindings;
@@ -844,6 +848,14 @@ export class Expression {
     return new Expression(args as ExpressionSpecification);
   }
 
+  resolvedLocale(): Expression {
+    return new Expression(['resolved-locale', this.build()] as ExpressionSpecification);
+  }
+
+  isSupportedScript(): Expression {
+    return new Expression(['is-supported-script', this.build()]);
+  }
+
   // String operations as chainable methods
   concat(...values: (string | Expression | ExpressionSpecification)[]): Expression {
     const args = ['concat', this.build(), ...values.map((v) => (v instanceof Expression ? v.build() : v))];
@@ -899,6 +911,18 @@ export class Expression {
     ...stops: (number | Expression | ExpressionSpecification | any)[]
   ): Expression {
     const args = ['interpolate', interpolation, this.build()];
+    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.build() : stop)));
+    return new Expression(args as ExpressionSpecification);
+  }
+
+  interpolateHcl(...stops: (number | Expression | ExpressionSpecification | any)[]): Expression {
+    const args = ['interpolate-hcl', this.build()];
+    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.build() : stop)));
+    return new Expression(args as ExpressionSpecification);
+  }
+
+  interpolateLab(...stops: (number | Expression | ExpressionSpecification | any)[]): Expression {
+    const args = ['interpolate-lab', this.build()];
     args.push(...stops.map((stop) => (stop instanceof Expression ? stop.build() : stop)));
     return new Expression(args as ExpressionSpecification);
   }

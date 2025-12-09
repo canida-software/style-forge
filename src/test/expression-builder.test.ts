@@ -35,6 +35,7 @@ import {
   format,
   $let,
   $var,
+  elevation,
 } from '../lib/index';
 
 describe('Expression Builder - Basic Expressions', () => {
@@ -62,6 +63,25 @@ describe('Expression Builder - Basic Expressions', () => {
   it('should create numeric literal expressions', () => {
     const expr = literal(42);
     expect(expr.build()).toEqual(['literal', 42]);
+  });
+
+  it('should create elevation expressions', () => {
+    const expr = elevation();
+    expect(expr.build()).toEqual(['elevation']);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+
+    // Edge case: Use in a larger expression
+    const combined = elevation().add(1000).interpolate(['linear'], 0, '#000000', 5000, '#ffffff');
+    expect(combined.build()).toEqual([
+      'interpolate',
+      ['linear'],
+      ['+', ['elevation'], 1000],
+      0,
+      '#000000',
+      5000,
+      '#ffffff',
+    ]);
+    expect(globalThis.testUtils.validateExpression(combined.build())).toBe(true);
   });
 });
 
@@ -205,11 +225,35 @@ describe('Expression Builder - Interpolation Expressions', () => {
   it('should create linear interpolation expressions', () => {
     const expr = interpolate(['linear'], zoom(), 0, 0.1, 10, 0.5, 20, 1.0);
     expect(expr.build()).toEqual(['interpolate', ['linear'], ['zoom'], 0, 0.1, 10, 0.5, 20, 1.0]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
   });
 
   it('should create exponential interpolation expressions', () => {
     const expr = interpolate(['exponential', 2], get('magnitude'), 0, 5, 10, 50);
     expect(expr.build()).toEqual(['interpolate', ['exponential', 2], ['get', 'magnitude'], 0, 5, 10, 50]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create HCL color interpolation expressions', () => {
+    const expr = get('value').interpolateHcl(0, '#ff0000', 1, '#00ff00');
+    expect(expr.build()).toEqual(['interpolate-hcl', ['get', 'value'], 0, '#ff0000', 1, '#00ff00']);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+
+    // Edge case: Multiple stops and expression input
+    const complex = zoom().interpolateHcl(5, '#000', 10, '#fff', 15, '#f00');
+    expect(complex.build()).toEqual(['interpolate-hcl', ['zoom'], 5, '#000', 10, '#fff', 15, '#f00']);
+    expect(globalThis.testUtils.validateExpression(complex.build())).toBe(true);
+  });
+
+  it('should create Lab color interpolation expressions', () => {
+    const expr = get('value').interpolateLab(0, '#ff0000', 1, '#00ff00');
+    expect(expr.build()).toEqual(['interpolate-lab', ['get', 'value'], 0, '#ff0000', 1, '#00ff00']);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+
+    // Edge case: Minimal stops
+    const minimal = literal(0.5).interpolateLab(0, '#000', 1, '#fff');
+    expect(minimal.build()).toEqual(['interpolate-lab', ['literal', 0.5], 0, '#000', 1, '#fff']);
+    expect(globalThis.testUtils.validateExpression(minimal.build())).toBe(true);
   });
 });
 
@@ -551,6 +595,31 @@ describe('Expression Builder - Advanced Type Expressions', () => {
       { 'text-color': '#ff6600', 'text-font': ['literal', ['Arial Bold']] },
     ]);
     expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+  });
+
+  it('should create is-supported-script expressions', () => {
+    const expr = literal('Hello').isSupportedScript();
+    expect(expr.build()).toEqual(['is-supported-script', ['literal', 'Hello']]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+
+    // Edge case: Expression input
+    const dynamic = get('text').isSupportedScript();
+    expect(dynamic.build()).toEqual(['is-supported-script', ['get', 'text']]);
+    expect(globalThis.testUtils.validateExpression(dynamic.build())).toBe(true);
+  });
+
+  it('should create resolved-locale expressions', () => {
+    const expr = collator({ locale: 'en' }).resolvedLocale();
+    expect(expr.build()).toEqual(['resolved-locale', ['collator', { locale: 'en' }]]);
+    expect(globalThis.testUtils.validateExpression(expr.build())).toBe(true);
+
+    // Edge case: Complex collator
+    const complex = collator({ 'case-sensitive': true, locale: get('userLocale') }).resolvedLocale();
+    expect(complex.build()).toEqual([
+      'resolved-locale',
+      ['collator', { 'case-sensitive': true, locale: ['get', 'userLocale'] }],
+    ]);
+    expect(globalThis.testUtils.validateExpression(complex.build())).toBe(true);
   });
 });
 

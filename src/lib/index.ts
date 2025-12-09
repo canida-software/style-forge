@@ -17,6 +17,7 @@ export const has = Expression.has;
 export const zoom = Expression.zoom;
 export const literal = Expression.literal;
 export const globalState = Expression.globalState;
+export const elevation = Expression.elevation;
 
 // Conditional expressions
 export const when = Expression.when;
