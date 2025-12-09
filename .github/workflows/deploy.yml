@@ -1,0 +1,41 @@
+name: Deploy to dist branch
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc  # Dynamically use the version from .nvmrc
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Prepare deploy folder
+        run: |
+          mkdir deploy
+          cp -r dist/* deploy/
+          cp package.json deploy/
+          cp README.md deploy/
+          cd deploy
+          npm pkg set main=index.js
+          npm pkg set types=index.d.ts
+          npm pkg set 'exports.".".types'=./index.d.ts
+          npm pkg set 'exports.".".import'=./index.js
+          npm pkg delete scripts
+          npm pkg delete devDependencies
+
+      - name: Deploy to dist branch
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: deploy
+          branch: dist
+          clean: true
