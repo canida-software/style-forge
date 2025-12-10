@@ -365,35 +365,36 @@ export class Expression {
   static let<T extends Record<string, Expression | ExpressionSpecification | any>>(bindings: T): LetBuilder;
   static let<T extends Record<string, Expression | ExpressionSpecification | any>>(
     bindings: T,
-    varFn: (boundVars: T) => VarBindings,
+    varFn: (boundVars: T & { $var: Record<keyof T, Expression> }) => Expression,
   ): Expression;
   static let<T extends Record<string, Expression | ExpressionSpecification | any>>(
     bindings: T,
-    varFn?: (boundVars: T) => VarBindings,
+    varFn?: (boundVars: T & { $var: Record<keyof T, Expression> }) => Expression,
   ): LetBuilder | Expression {
     if (varFn) {
-      // Functional syntax: compute additional bindings and return final expression
-      const result = varFn(bindings);
-      const additionalBindings = result.bindings;
+      // Functional syntax: compute the final expression using bound variables
+      const varRefs: Record<string, Expression> = {};
+      for (const name of Object.keys(bindings)) {
+        varRefs[name] = Expression.var(name);
+      }
 
-      // Combine initial and additional bindings
-      const allBindings = { ...bindings, ...additionalBindings };
+      const boundVars = { ...bindings, $var: varRefs as Record<keyof T, Expression> } as T & {
+        $var: Record<keyof T, Expression>;
+      };
 
-      // Build let expression
+      const resultExpression = varFn(boundVars);
+
+      // Build let expression with initial bindings and final expression
       const letExpr: any[] = ['let'];
-      for (const [name, value] of Object.entries(allBindings)) {
+      for (const [name, value] of Object.entries(bindings)) {
         const valueSpec = value instanceof Expression ? value.forge() : value;
         letExpr.push(name, valueSpec);
       }
 
-      // Return reference to the last additional binding (or last initial if no additional)
-      const resultKeys = Object.keys(additionalBindings);
-      const resultKey =
-        resultKeys.length > 0
-          ? resultKeys[resultKeys.length - 1]
-          : Object.keys(bindings)[Object.keys(bindings).length - 1];
+      // Add the final expression
+      const resultSpec = resultExpression.forge();
+      letExpr.push(resultSpec);
 
-      letExpr.push(['var', resultKey]);
       return new Expression(letExpr as ExpressionSpecification);
     } else {
       // Builder pattern: return LetBuilder for .in() chaining

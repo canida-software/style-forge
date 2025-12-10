@@ -702,85 +702,88 @@ describe('Expression Builder - Variable Binding Expressions', () => {
     expect(globalThis.testUtils.validateExpression(expr.forge())).toBe(true);
   });
 
-  it('should support functional syntax for let expressions', () => {
-    const expr = $let({ population: get('population'), area: get('area') }, ({ population, area }) =>
-      $var({ density: population.divide(area) }),
-    );
+  it('should support functional syntax with direct expression return', () => {
+    const expr = $let({ someNumber: 500 }, ({ $var }) => {
+      return interpolate(['linear'], $var.someNumber, 274, '#edf8e9', 1551, '#006d2c');
+    });
+    expect(expr.forge()).toEqual([
+      'let',
+      'someNumber',
+      500,
+      ['interpolate', ['linear'], ['var', 'someNumber'], 274, '#edf8e9', 1551, '#006d2c'],
+    ]);
+    expect(globalThis.testUtils.validateExpression(expr.forge())).toBe(true);
+  });
+
+  it('should support functional syntax with complex expressions', () => {
+    const expr = $let({ population: get('population'), area: get('area') }, ({ $var }) => {
+      return $var.population.divide($var.area).multiply(100);
+    });
     expect(expr.forge()).toEqual([
       'let',
       'population',
       ['get', 'population'],
       'area',
       ['get', 'area'],
-      'density',
-      ['/', ['get', 'population'], ['get', 'area']],
-      ['var', 'density'],
+      ['*', ['/', ['var', 'population'], ['var', 'area']], 100],
     ]);
     expect(globalThis.testUtils.validateExpression(expr.forge())).toBe(true);
   });
 
-  it('should support functional syntax with multiple computed bindings', () => {
-    const expr = $let({ pop: get('population'), area: get('area') }, ({ pop, area }) =>
-      $var({ density: pop.divide(area), scaledDensity: pop.divide(area).multiply(100) }),
-    );
+  it('should support functional syntax with multiple variables and arithmetic', () => {
+    const expr = $let({ width: get('width'), height: get('height'), scale: 2 }, ({ $var }) => {
+      return add(multiply($var.width, $var.scale), multiply($var.height, $var.scale));
+    });
     expect(expr.forge()).toEqual([
       'let',
-      'pop',
-      ['get', 'population'],
-      'area',
-      ['get', 'area'],
-      'density',
-      ['/', ['get', 'population'], ['get', 'area']],
-      'scaledDensity',
-      ['*', ['/', ['get', 'population'], ['get', 'area']], 100],
-      ['var', 'scaledDensity'],
+      'width',
+      ['get', 'width'],
+      'height',
+      ['get', 'height'],
+      'scale',
+      2,
+      ['+', ['*', ['var', 'width'], ['var', 'scale']], ['*', ['var', 'height'], ['var', 'scale']]],
     ]);
     expect(globalThis.testUtils.validateExpression(expr.forge())).toBe(true);
   });
 
-  it('should enforce VarBindings type safety - users must use $var', () => {
-    // This would cause a TypeScript error if uncommented:
-    // $let({ pop: get('population') }, ({ pop }) => ({
-    //   density: pop.multiply(2)  // Error: plain object not assignable to VarBindings
-    // }));
+  it('should support functional syntax with complex conditional and interpolation logic', () => {
+    const expr = $let({ magnitude: get('magnitude'), zoom: get('zoom'), baseSize: 8, maxSize: 24 }, ({ $var }) => {
+      return when($var.zoom.lt(10))
+        .then($var.baseSize)
+        .when($var.zoom.lt(15))
+        .then(interpolate(['linear'], $var.magnitude, 0, $var.baseSize, 10, $var.baseSize.multiply(1.5)))
+        .else(interpolate(['exponential', 2], $var.magnitude, 0, $var.baseSize.multiply(2), 10, $var.maxSize));
+    });
 
-    // Only this works:
-    const expr = $let({ pop: get('population') }, ({ pop }) => $var({ pop2: pop.multiply(2) }));
     expect(expr.forge()).toEqual([
       'let',
-      'pop',
-      ['get', 'population'],
-      'pop2',
-      ['*', ['get', 'population'], 2],
-      ['var', 'pop2'],
+      'magnitude',
+      ['get', 'magnitude'],
+      'zoom',
+      ['get', 'zoom'],
+      'baseSize',
+      8,
+      'maxSize',
+      24,
+      [
+        'case',
+        ['<', ['var', 'zoom'], 10],
+        ['var', 'baseSize'],
+        ['<', ['var', 'zoom'], 15],
+        ['interpolate', ['linear'], ['var', 'magnitude'], 0, ['var', 'baseSize'], 10, ['*', ['var', 'baseSize'], 1.5]],
+        [
+          'interpolate',
+          ['exponential', 2],
+          ['var', 'magnitude'],
+          0,
+          ['*', ['var', 'baseSize'], 2],
+          10,
+          ['var', 'maxSize'],
+        ],
+      ],
     ]);
     expect(globalThis.testUtils.validateExpression(expr.forge())).toBe(true);
-  });
-
-  it('should demonstrate overloaded $var - variable reference vs variable binding', () => {
-    // $var(string) - reference a variable
-    const varRef = $var('density');
-    expect(varRef.forge()).toEqual(['var', 'density']);
-
-    // $var(object) - create variable bindings (used in varFn)
-    const bindings = $var({ density: get('population').divide(get('area')) });
-    expect(bindings.__brand).toBe('VarBindings');
-    expect(bindings.bindings).toEqual({ density: get('population').divide(get('area')) });
-
-    // Combined usage in $let
-    const expr = $let({ pop: get('population'), area: get('area') }, ({ pop, area }) =>
-      $var({ density: pop.divide(area) }),
-    );
-    expect(expr.forge()).toEqual([
-      'let',
-      'pop',
-      ['get', 'population'],
-      'area',
-      ['get', 'area'],
-      'density',
-      ['/', ['get', 'population'], ['get', 'area']],
-      ['var', 'density'],
-    ]);
   });
 
   describe('Spatial Operations', () => {

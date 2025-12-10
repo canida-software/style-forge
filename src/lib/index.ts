@@ -7,8 +7,9 @@ export { ConditionalThenBuilder } from './core/expression-builder.js';
 export { MatchBuilder } from './core/expression-builder.js';
 export { MatchFallbackBuilder } from './core/expression-builder.js';
 export { LetBuilder } from './core/expression-builder.js';
-export type { VarBindings } from './core/expression-builder.js';
+
 export { Property } from './core/expression-builder.js';
+export type { VarBindings } from './core/expression-builder.js';
 export { Layer } from './core/expression-builder.js';
 
 // Direct exports for ergonomic usage without Expression. prefix

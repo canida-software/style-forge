@@ -20,17 +20,10 @@ npm install @maplibre/maplibre-gl-style-spec
 
 ```typescript
 // MapLibre JSON
-const highlightColorJson = [
-  'case',
-  ['has', 'isSelected'],
-  '#f97316',
-  '#9ca3af',
-];
+const highlightColorJson = ['case', ['has', 'isSelected'], '#f97316', '#9ca3af'];
 
 // Style Forge
-const highlightColor = when(has('isSelected'))
-  .then('#f97316')
-  .else('#9ca3af');
+const highlightColor = when(has('isSelected')).then('#f97316').else('#9ca3af');
 ```
 
 ## Usage
@@ -59,12 +52,7 @@ const colorByCategoryJson = [
 
 // Style Forge
 const colorByCategory = get('category')
-  .match({
-    residential: '#ffeb3b',
-    commercial: '#2196f3',
-    industrial: '#f44336',
-    recreational: '#4caf50',
-  })
+  .match({ residential: '#ffeb3b', commercial: '#2196f3', industrial: '#f44336', recreational: '#4caf50' })
   .fallback('#9e9e9e');
 
 // ---------------------------------------------------------------------------
@@ -72,17 +60,7 @@ const colorByCategory = get('category')
 // ---------------------------------------------------------------------------
 
 // MapLibre JSON
-const opacityByZoomJson = [
-  'interpolate',
-  ['linear'],
-  ['zoom'],
-  0,
-  0.1,
-  10,
-  0.5,
-  20,
-  1.0,
-];
+const opacityByZoomJson = ['interpolate', ['linear'], ['zoom'], 0, 0.1, 10, 0.5, 20, 1.0];
 
 // Style Forge
 const opacityByZoom = interpolate(['linear'], zoom(), 0, 0.1, 10, 0.5, 20, 1.0);
@@ -138,25 +116,63 @@ const scaledDensityJson = [
   ['get', 'population'],
   'area',
   ['get', 'area'],
-  'scaledDensity',
-  ['*', ['/', ['get', 'population'], ['get', 'area']], 100],
-  ['var', 'scaledDensity'],
+  ['*', ['/', ['var', 'pop'], ['var', 'area']], 100],
 ];
 
-// Style Forge
-const scaledDensity = $let(
-  { pop: get('population'), area: get('area') },
-  ({ pop, area }) => $var({ scaledDensity: pop.divide(area).multiply(100) }),
+// Style Forge - Functional syntax (recommended for complex expressions)
+const scaledDensity = $let({ pop: get('population'), area: get('area') }, ({ $var }) =>
+  $var.pop.divide($var.area).multiply(100),
+);
+
+// Style Forge - Builder syntax (simpler cases)
+const scaledDensityBuilder = $let({ pop: get('population'), area: get('area') }).in(
+  $var('pop').divide($var('area')).multiply(100),
 );
 
 // ---------------------------------------------------------------------------
-// Example 6: Palette-based color
+// Example 6: Complex adaptive sizing with let
+// ---------------------------------------------------------------------------
+
+// MapLibre JSON
+const adaptiveSizeJson = [
+  'let',
+  'magnitude',
+  ['get', 'magnitude'],
+  'zoom',
+  ['get', 'zoom'],
+  'baseSize',
+  8,
+  'maxSize',
+  24,
+  [
+    'case',
+    ['<', ['var', 'zoom'], 10],
+    ['var', 'baseSize'],
+    ['<', ['var', 'zoom'], 15],
+    ['interpolate', ['linear'], ['var', 'magnitude'], 0, ['var', 'baseSize'], 10, ['*', ['var', 'baseSize'], 1.5]],
+    ['interpolate', ['exponential', 2], ['var', 'magnitude'], 0, ['*', ['var', 'baseSize'], 2], 10, ['var', 'maxSize']],
+  ],
+];
+
+// Style Forge - Functional syntax shines for complex expressions
+const adaptiveSize = $let({ magnitude: get('magnitude'), zoom: get('zoom'), baseSize: 8, maxSize: 24 }, ({ $var }) => {
+  return when($var.zoom.lt(10))
+    .then($var.baseSize)
+    .when($var.zoom.lt(15))
+    .then(interpolate(['linear'], $var.magnitude, 0, $var.baseSize, 10, $var.baseSize.multiply(1.5)))
+    .else(interpolate(['exponential', 2], $var.magnitude, 0, $var.baseSize.multiply(2), 10, $var.maxSize));
+});
+
+// ---------------------------------------------------------------------------
+// Example 7: Palette-based color
+// ---------------------------------------------------------------------------
+// Example 7: Palette-based color
 // ---------------------------------------------------------------------------
 
 const palette = [
   '#ff0000',
   '#00ff00',
-  '#0000ff'
+  '#0000ff',
   // ...
 ];
 
@@ -180,7 +196,7 @@ const paletteColorJson = [
 ];
 
 // Style Forge
-const palleteColor = when(has('id'))
+const paletteColor = when(has('id'))
   .then(
     match(get('id').toNumber().mod(palette.length))
       .branches(Object.fromEntries(palette.map((color, index) => [index, color] as const)))
@@ -189,7 +205,7 @@ const palleteColor = when(has('id'))
   .else('#64748b');
 
 const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source', 'buildings')
-  .fillColor(palleteColor.forge())
+  .fillColor(paletteColor.forge())
   .fillOpacity(0.8)
   .visibility('visible');
 ```
@@ -199,6 +215,7 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 ### Fluent Expression API
 
 **Basic Expressions**
+
 - `get(property)`, `has(property)` – feature access and existence.
 - `zoom()` – current zoom level.
 - `literal(value)` – literal values.
@@ -206,40 +223,49 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 - `elevation()` – terrain elevation expression.
 
 **Conditionals & Match**
+
 - `when(condition).then(value).else(value)` – fluent conditional builder.
 - `conditional(condition)` – alias for `when`.
 - `match(input).branches({...}).fallback(value)` – match expressions with branches.
 
 **Variable Bindings**
-- `$let(bindings, varFn?)` / `Expression.let(...)` – scoped variable bindings using MapLibre `let`.
+
+- `$let(bindings)` / `Expression.let(bindings)` – scoped variable bindings using MapLibre `let` (builder syntax).
+- `$let(bindings, callback)` / `Expression.let(bindings, callback)` – functional syntax for complex expressions.
 - `$var(name)` / `Expression.var(name)` – reference a bound variable.
 
 **Mathematics & Constants**
+
 - Static helpers: `add(...)`, `subtract(a,b)`, `multiply(...)`, `divide(a,b)`, `mod(a,b)`, `pow(a,b)`.
 - Fluent math: `expr.add(...)`, `expr.subtract(...)`, `expr.multiply(...)`, `expr.divide(...)`, `expr.mod(...)`, `expr.pow(...)`.
 - Extra fluent math: `expr.sqrt()`, `expr.log10()`.
 - Constants: `pi()`, `e()`, `ln2()`.
 
 **Comparison & Logic**
+
 - Comparisons: `eq(a,b)`, `neq(a,b)`, `gt(a,b)`, `gte(a,b)`, `lt(a,b)`, `lte(a,b)` or fluent `expr.eq(...)`, etc.
 - Logic: `and(...)`, `or(...)`, `not(expr)` and fluent `expr.and(...)`, `expr.or(...)`.
 
 **Type Conversion & Assertions**
+
 - Conversions: `toNumber(value)`, `toString(value)`, `toBoolean(value)`, `toColor(value)` or fluent `expr.toNumber()`, etc.
 - Assertions: `string(value)`, `number(value)`, `boolean(value)`, `array(value)`, `object(value)` or fluent `expr.string()`, `expr.array('string')`, etc.
 - Type checks: `typeOf(value)` / fluent `expr.typeof()`.
 - Null handling: `coalesce(...values)` / fluent `expr.coalesce(...)`.
 
 **Advanced Type & Formatting**
+
 - `collator(options?)` – locale-aware string comparison configuration.
 - `format(...parts)` – rich text formatting.
 - Fluent helpers: `expr.image()` for sprite references, `expr.numberFormat(options)` for localized numbers, `expr.resolvedLocale()`, `expr.isSupportedScript()`.
 
 **Strings & Lookups**
+
 - String helpers: `concat(...values)`, `upcase(value)`, `downcase(value)` or fluent `expr.concat(...)`, `expr.upcase()`, `expr.downcase()`.
 - Lookups (fluent only): `expr.length()`, `expr.at(index)`, `expr.slice(start, end?)`, `expr.in(collection)`, `expr.indexOf(item, fromIndex?)`.
 
 **Interpolation & Stepping**
+
 - Static interpolation: `interpolate(interpolation, input, ...stops)` – e.g. `interpolate(['linear'], zoom(), 0, 0.1, 20, 1.0)`.
 - Fluent interpolation: `expr.interpolate(interpolation, ...stops)`, plus color-space variants `expr.interpolateHcl(...)`, `expr.interpolateLab(...)`.
 - Static steps: `step(input, min, ...stops)`.
