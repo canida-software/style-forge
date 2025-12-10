@@ -1,0 +1,39 @@
+{
+  "name": "style-forge",
+  "version": "0.1.13",
+  "description": "Type-safe MapLibre style expression builder",
+  "author": "Quoc Duong Bui",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canida/style-forge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/canida/style-forge/issues"
+  },
+  "homepage": "https://github.com/canida/style-forge#readme",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
+  },
+  "files": [
+    "core/**/*",
+    "index.*",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@maplibre/maplibre-gl-style-spec": ">=23.0.0"
+  },
+  "keywords": [
+    "maplibre",
+    "mapbox",
+    "expressions",
+    "styling",
+    "typescript",
+    "builder"
+  ]
+}
