@@ -180,17 +180,16 @@ const paletteColorJson = [
 ];
 
 // Style Forge
-const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source', 'buildings')
-  .fillColor(
-    when(has('id'))
-      .then(
-        match(get('id').toNumber().mod(palette.length))
-          .branches(Object.fromEntries(palette.map((color, index) => [index, color] as const)))
-          .fallback('#64748b'),
-      )
-      .else('#64748b')
-      .forge(),
+const palleteColor = when(has('id'))
+  .then(
+    match(get('id').toNumber().mod(palette.length))
+      .branches(Object.fromEntries(palette.map((color, index) => [index, color] as const)))
+      .fallback('#64748b'),
   )
+  .else('#64748b');
+
+const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source', 'buildings')
+  .fillColor(palleteColor.forge())
   .fillOpacity(0.8)
   .visibility('visible');
 ```
