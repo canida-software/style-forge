@@ -5,8 +5,8 @@
  * These examples show how to replace manual expression arrays with type-safe builders.
  */
 
-import { Expression, Property, Value, Layer } from './expression-builder';
-import { when, has, get, match, zoom, literal, interpolate } from '../index';
+import { Expression, Property, Value, Layer } from './expression-builder.js';
+import { when, has, get, match, zoom, literal, interpolate } from '../index.js';
 
 // ============================================================================
 // BASIC EXPRESSIONS

@@ -1,4 +1,4 @@
-import { Expression } from './core/expression-builder';
+import { Expression } from './core/expression-builder.js';
 
 export { Expression } from './core/expression-builder';
 export { Value } from './core/expression-builder';
