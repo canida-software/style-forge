@@ -8,26 +8,29 @@ A type-safe MapLibre style expression builder for TypeScript.
 npm install git+https://github.com/canida-software/style-forge.git#dist
 ```
 
-Note: This installs the pre-built version from the `dist` branch. Ensure you have the peer dependency installed:
+Ensure the peer dependency is installed:
 
 ```bash
 npm install @maplibre/maplibre-gl-style-spec
 ```
 
-
 ## API Philosophy
 
-**🎯 Fluent API First** – The fluent, chainable API is the recommended way to use Style Forge.
+**🎯 Fluent API First** – The fluent, chainable API is the recommended way to use Style Forge. Static helpers are kept for compatibility, but new code should prefer the fluent style.
 
 ```typescript
-// ✅ Recommended: Fluent API
-const colorByCategory = get('category').match()
-  .branches({
-    residential: '#ffeb3b',
-    commercial: '#2196f3',
-    industrial: '#f44336'
-  })
-  .fallback('#9e9e9e');
+// MapLibre JSON
+const highlightColorJson = [
+  'case',
+  ['has', 'isSelected'],
+  '#f97316',
+  '#9ca3af',
+];
+
+// Style Forge
+const highlightColor = when(has('isSelected'))
+  .then('#f97316')
+  .else('#9ca3af');
 ```
 
 ## Usage
@@ -35,84 +38,153 @@ const colorByCategory = get('category').match()
 ```typescript
 import { get, has, match, interpolate, when, zoom, Layer, $let, $var } from 'style-forge';
 
-// Data-driven color based on feature properties - fluent API
-const colorByCategory = get('category').match()
-  .branches({
+// ---------------------------------------------------------------------------
+// Example 1: Category-based color
+// ---------------------------------------------------------------------------
+
+// MapLibre JSON
+const colorByCategoryJson = [
+  'match',
+  ['get', 'category'],
+  'residential',
+  '#ffeb3b',
+  'commercial',
+  '#2196f3',
+  'industrial',
+  '#f44336',
+  'recreational',
+  '#4caf50',
+  '#9e9e9e',
+];
+
+// Style Forge
+const colorByCategory = get('category')
+  .match({
     residential: '#ffeb3b',
     commercial: '#2196f3',
     industrial: '#f44336',
-    recreational: '#4caf50'
+    recreational: '#4caf50',
   })
   .fallback('#9e9e9e');
 
-// Zoom-based opacity with smooth interpolation
-const opacityByZoom = interpolate(
-  ['linear'],
-  zoom(),
-  0, 0.1,   // At zoom 0: 10% opacity
-  10, 0.5,  // At zoom 10: 50% opacity
-  20, 1.0   // At zoom 20: 100% opacity
-);
+// ---------------------------------------------------------------------------
+// Example 2: Zoom-based opacity
+// ---------------------------------------------------------------------------
 
-// Conditional sizing based on magnitude
+// MapLibre JSON
+const opacityByZoomJson = [
+  'interpolate',
+  ['linear'],
+  ['zoom'],
+  0,
+  0.1,
+  10,
+  0.5,
+  20,
+  1.0,
+];
+
+// Style Forge
+const opacityByZoom = interpolate(['linear'], zoom(), 0, 0.1, 10, 0.5, 20, 1.0);
+
+// ---------------------------------------------------------------------------
+// Example 3: Conditional size by magnitude
+// ---------------------------------------------------------------------------
+
+// MapLibre JSON
+const sizeByMagnitudeJson = [
+  'case',
+  ['>=', ['get', 'magnitude'], 5],
+  ['interpolate', ['exponential', 2], ['get', 'magnitude'], 5, 10, 10, 50],
+  5,
+];
+
+// Style Forge
 const sizeByMagnitude = when(get('magnitude').gte(5))
-  .then(
-    interpolate(['exponential', 2], get('magnitude'), 5, 10, 10, 50)
-  )
+  .then(interpolate(['exponential', 2], get('magnitude'), 5, 10, 10, 50))
   .else(5);
 
-// Complex data-driven layer
+// ---------------------------------------------------------------------------
+// Example 4: Layer with data-driven color and size
+// ---------------------------------------------------------------------------
+
+// MapLibre JSON
+const earthquakeLayerJson = {
+  id: 'earthquakes',
+  type: 'circle',
+  source: 'earthquake-source',
+  paint: {
+    'circle-color': colorByCategoryJson,
+    'circle-radius': sizeByMagnitudeJson,
+    'circle-opacity': opacityByZoomJson,
+  },
+};
+
+// Style Forge
 const earthquakeLayer = new Layer('circle', 'earthquakes', 'earthquake-source')
   .circleColor(colorByCategory.build())
   .circleRadius(sizeByMagnitude.build())
   .circleOpacity(opacityByZoom.build())
   .visibility('visible');
 
-const smartColor = match(get('type'))
-  .branches({
-    house: '#ffeb3b',
-    apartment: '#2196f3',
-    office: '#f44336'
-  })
-  .fallback('#9e9e9e');
+// ---------------------------------------------------------------------------
+// Example 5: Derived value with let / var
+// ---------------------------------------------------------------------------
 
-const adaptiveSize = when(zoom().gt(12))
-  .then(get('area').multiply(0.01).add(5))
-  .else(8);
+// MapLibre JSON
+const scaledDensityJson = [
+  'let',
+  'pop',
+  ['get', 'population'],
+  'area',
+  ['get', 'area'],
+  'scaledDensity',
+  ['*', ['/', ['get', 'population'], ['get', 'area']], 100],
+  ['var', 'scaledDensity'],
+];
 
-const buildingLayer = new Layer('fill', 'buildings', 'map-data', 'buildings')
-  .fillColor(smartColor.build())
-  .fillOpacity(interpolate(['linear'], zoom(), 10, 0.3, 18, 0.9).build())
-  .visibility('visible');
-
-// Derived values with scoped variables using $let / $var
+// Style Forge
 const scaledDensity = $let(
   { pop: get('population'), area: get('area') },
   ({ pop, area }) => $var({ scaledDensity: pop.divide(area).multiply(100) }),
 );
 
+// ---------------------------------------------------------------------------
+// Example 6: Palette-based color
+// ---------------------------------------------------------------------------
 
-// Complex conditional with large color palettes
-const palette = [
-  '#ff0000',
-  '#00ff00',
-  '#0000ff',
-  // ...
+const palette = ['#ff0000', '#00ff00', '#0000ff'];
+
+// MapLibre JSON (schematic)
+const paletteColorJson = [
+  'case',
+  ['has', 'id'],
+  [
+    'match',
+    ['%', ['to-number', ['get', 'id']], palette.length],
+    0,
+    palette[0],
+    1,
+    palette[1],
+    2,
+    palette[2],
+    // ...
+    '#64748b',
+  ],
+  '#64748b',
 ];
+
+// Style Forge
 const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source', 'buildings')
   .fillColor(
     when(has('id'))
       .then(
         match(get('id').toNumber().mod(palette.length))
-          .branches(
-            Object.fromEntries(
-              palette.map((color, index) => [index, color] as const),
-            ),
-          )
-          .fallback('#64748b')
+          .branches(Object.fromEntries(palette.map((color, index) => [index, color] as const)))
+          .fallback('#64748b'),
       )
       .else('#64748b')
-      .build()
+      .build(),
   )
   .fillOpacity(0.8)
   .visibility('visible');
@@ -171,31 +243,23 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 
 ### Layer Builder
 
-- `new Layer(type, id?, source?, sourceLayer?)` - Create a layer
-- `.fillColor(value)`, `.circleRadius(value)`, etc. - Set style properties
-- `.filter(expression)` - Add layer filter
-- `.visibility('visible' | 'none')` - Control layer visibility
-- `.minZoom(value)`, `.maxZoom(value)` - Set zoom constraints
+- `new Layer(type, id?, source?, sourceLayer?)` – create a layer.
+- `.fillColor(value)`, `.circleRadius(value)`, etc. – set paint properties.
+- `.filter(expression)` – add layer filter.
+- `.visibility('visible' | 'none')` – control layer visibility.
+- `.minZoom(value)`, `.maxZoom(value)` – set zoom constraints.
 
 ## Building
 
 ```bash
-# Build the library
 npm run build
 ```
 
 ## Development
 
 ```bash
-# Install dependencies
 npm install
-
-# Run linting
 npm run lint
-
-# Format code
 npm run format
-
-# Start dev server
 npm run dev
 ```

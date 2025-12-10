@@ -400,9 +400,18 @@ export class Expression {
       return new LetBuilder(bindings);
     }
   }
-
-  static match(input: Expression | ExpressionSpecification): MatchBuilder {
-    return new MatchBuilder(input);
+  static match(input: Expression | ExpressionSpecification): MatchBuilder;
+  static match(
+    input: Expression | ExpressionSpecification,
+    branches: Record<string | number, Expression | ExpressionSpecification | any>,
+  ): MatchFallbackBuilder;
+  static match(
+    input: Expression | ExpressionSpecification,
+    branches?: Record<string | number, Expression | ExpressionSpecification | any>,
+  ): MatchBuilder | MatchFallbackBuilder {
+    const expr = input instanceof Expression ? input : new Expression(input);
+    const builder = new MatchBuilder(expr);
+    return branches ? builder.branches(branches) : builder;
   }
 
   static interpolate(
@@ -690,8 +699,13 @@ export class Expression {
   /**
    * Starts a match expression builder with this expression as input
    */
-  match(): MatchBuilder {
-    return new MatchBuilder(this);
+  match(): MatchBuilder;
+  match(branches: Record<string | number, Expression | ExpressionSpecification | any>): MatchFallbackBuilder;
+  match(
+    branches?: Record<string | number, Expression | ExpressionSpecification | any>,
+  ): MatchBuilder | MatchFallbackBuilder {
+    const builder = new MatchBuilder(this);
+    return branches ? builder.branches(branches) : builder;
   }
 
   // Mathematical operations as chainable methods
