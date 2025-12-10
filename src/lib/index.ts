@@ -1,15 +1,15 @@
 import { Expression } from './core/expression-builder.js';
 
-export { Expression } from './core/expression-builder';
-export { Value } from './core/expression-builder';
-export { ConditionalBuilder } from './core/expression-builder';
-export { ConditionalThenBuilder } from './core/expression-builder';
-export { MatchBuilder } from './core/expression-builder';
-export { MatchFallbackBuilder } from './core/expression-builder';
-export { LetBuilder } from './core/expression-builder';
-export type { VarBindings } from './core/expression-builder';
-export { Property } from './core/expression-builder';
-export { Layer } from './core/expression-builder';
+export { Expression } from './core/expression-builder.js';
+export { Value } from './core/expression-builder.js';
+export { ConditionalBuilder } from './core/expression-builder.js';
+export { ConditionalThenBuilder } from './core/expression-builder.js';
+export { MatchBuilder } from './core/expression-builder.js';
+export { MatchFallbackBuilder } from './core/expression-builder.js';
+export { LetBuilder } from './core/expression-builder.js';
+export type { VarBindings } from './core/expression-builder.js';
+export { Property } from './core/expression-builder.js';
+export { Layer } from './core/expression-builder.js';
 
 // Direct exports for ergonomic usage without Expression. prefix
 export const get = Expression.get;

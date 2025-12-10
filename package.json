@@ -1,6 +1,6 @@
 {
   "name": "style-forge",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Type-safe MapLibre style expression builder",
   "author": "Quoc Duong Bui",
   "repository": {
