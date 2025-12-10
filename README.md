@@ -153,7 +153,12 @@ const scaledDensity = $let(
 // Example 6: Palette-based color
 // ---------------------------------------------------------------------------
 
-const palette = ['#ff0000', '#00ff00', '#0000ff'];
+const palette = [
+  '#ff0000',
+  '#00ff00',
+  '#0000ff'
+  // ...
+];
 
 // MapLibre JSON (schematic)
 const paletteColorJson = [
