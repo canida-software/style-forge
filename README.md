@@ -155,16 +155,22 @@ const adaptiveSizeJson = [
 ];
 
 // Style Forge - Functional syntax shines for complex expressions
-const adaptiveSize = $let({ magnitude: get('magnitude'), zoom: get('zoom'), baseSize: 8, maxSize: 24 }, ({ $var }) => {
-  return when($var.zoom.lt(10))
-    .then($var.baseSize)
-    .when($var.zoom.lt(15))
-    .then(interpolate(['linear'], $var.magnitude, 0, $var.baseSize, 10, $var.baseSize.multiply(1.5)))
-    .else(interpolate(['exponential', 2], $var.magnitude, 0, $var.baseSize.multiply(2), 10, $var.maxSize));
-});
+const adaptiveSize = $let(
+  {
+    magnitude: get('magnitude'),
+    zoom: get('zoom'),
+    baseSize: 8,
+    maxSize: 24,
+  },
+  ({ $var }) => {
+    return when($var.zoom.lt(10))
+      .then($var.baseSize)
+      .when($var.zoom.lt(15))
+      .then(interpolate(['linear'], $var.magnitude, 0, $var.baseSize, 10, $var.baseSize.multiply(1.5)))
+      .else(interpolate(['exponential', 2], $var.magnitude, 0, $var.baseSize.multiply(2), 10, $var.maxSize));
+  },
+);
 
-// ---------------------------------------------------------------------------
-// Example 7: Palette-based color
 // ---------------------------------------------------------------------------
 // Example 7: Palette-based color
 // ---------------------------------------------------------------------------
