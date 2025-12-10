@@ -34,14 +34,14 @@ export class Value<T> {
   }
 
   static expression<T>(expression: Expression): Value<T> {
-    return new Value(expression.build() as PropertyValueSpecification<T>);
+    return new Value(expression.forge() as PropertyValueSpecification<T>);
   }
 
   static cameraFunction<T>(fn: CameraFunctionSpecification<T>): Value<T> {
     return new Value(fn);
   }
 
-  build(): PropertyValueSpecification<T> {
+  forge(): PropertyValueSpecification<T> {
     return this.value;
   }
 }
@@ -98,10 +98,10 @@ export class Value<T> {
  * @example
  * // Using Layer for complete layers - fluent API
  * const layer = new Layer('fill', 'my-layer', 'my-source', 'my-layer')
- *   .fillColor(fillColor.build())
+ *   .fillColor(fillColor.forge())
  *   .fillOpacity(0.8)
  *   .visibility('visible')
- *   .build();
+ *   .forge();
  */
 
 // ============================================================================
@@ -133,25 +133,25 @@ export class ConditionalBuilder {
    */
   else(value: Expression | ExpressionSpecification | any): Expression {
     this.elseValue = value;
-    return this.build();
+    return this.forge();
   }
 
   /**
    * Builds the final case expression
    */
-  build(): Expression {
+  forge(): Expression {
     const caseExpr: any[] = ['case'];
 
     // Add all when-then pairs
     for (const { when, then } of this.conditions) {
-      const whenSpec = when instanceof Expression ? when.build() : when;
-      const thenSpec = then instanceof Expression ? then.build() : then;
+      const whenSpec = when instanceof Expression ? when.forge() : when;
+      const thenSpec = then instanceof Expression ? then.forge() : then;
       caseExpr.push(whenSpec, thenSpec);
     }
 
     // Add else if present
     if (this.elseValue !== undefined) {
-      const elseSpec = this.elseValue instanceof Expression ? this.elseValue.build() : this.elseValue;
+      const elseSpec = this.elseValue instanceof Expression ? this.elseValue.forge() : this.elseValue;
       caseExpr.push(elseSpec);
     }
 
@@ -204,23 +204,23 @@ export class MatchBuilder {
   /**
    * Builds the final match expression
    */
-  build(): Expression {
+  forge(): Expression {
     const matchExpr: any[] = ['match'];
 
     // Add input
-    const inputSpec = this.input instanceof Expression ? this.input.build() : this.input;
+    const inputSpec = this.input instanceof Expression ? this.input.forge() : this.input;
     matchExpr.push(inputSpec);
 
     // Add all when-then pairs
     for (const { when, then } of this.conditions) {
       matchExpr.push(when);
-      const thenSpec = then instanceof Expression ? then.build() : then;
+      const thenSpec = then instanceof Expression ? then.forge() : then;
       matchExpr.push(thenSpec);
     }
 
     // Add else if present
     if (this.elseValue !== undefined) {
-      const elseSpec = this.elseValue instanceof Expression ? this.elseValue.build() : this.elseValue;
+      const elseSpec = this.elseValue instanceof Expression ? this.elseValue.forge() : this.elseValue;
       matchExpr.push(elseSpec);
     }
 
@@ -258,7 +258,7 @@ export class MatchFallbackBuilder {
    */
   fallback(value: Expression | ExpressionSpecification | any): Expression {
     this.matchBuilder.setElse(value);
-    return this.matchBuilder.build();
+    return this.matchBuilder.forge();
   }
 }
 
@@ -282,12 +282,12 @@ export class LetBuilder {
     // Add all variable bindings as alternating name-value pairs
     for (const [name, value] of Object.entries(this.bindings)) {
       letExpr.push(name);
-      const valueSpec = value instanceof Expression ? value.build() : value;
+      const valueSpec = value instanceof Expression ? value.forge() : value;
       letExpr.push(valueSpec);
     }
 
     // Add the final expression
-    const resultSpec = resultExpression instanceof Expression ? resultExpression.build() : resultExpression;
+    const resultSpec = resultExpression instanceof Expression ? resultExpression.forge() : resultExpression;
     letExpr.push(resultSpec);
 
     return new Expression(letExpr as ExpressionSpecification);
@@ -382,7 +382,7 @@ export class Expression {
       // Build let expression
       const letExpr: any[] = ['let'];
       for (const [name, value] of Object.entries(allBindings)) {
-        const valueSpec = value instanceof Expression ? value.build() : value;
+        const valueSpec = value instanceof Expression ? value.forge() : value;
         letExpr.push(name, valueSpec);
       }
 
@@ -419,10 +419,10 @@ export class Expression {
     input: Expression,
     ...stops: (number | Expression | any)[]
   ): Expression {
-    const args: any[] = ['interpolate', interpolation, input.build()];
+    const args: any[] = ['interpolate', interpolation, input.forge()];
     for (const stop of stops) {
       if (stop instanceof Expression) {
-        args.push(stop.build());
+        args.push(stop.forge());
       } else {
         args.push(stop);
       }
@@ -431,10 +431,10 @@ export class Expression {
   }
 
   static step(input: Expression, min: number | Expression, ...stops: (number | Expression | any)[]): Expression {
-    const args: any[] = ['step', input.build(), min instanceof Expression ? min.build() : min];
+    const args: any[] = ['step', input.forge(), min instanceof Expression ? min.forge() : min];
     for (const stop of stops) {
       if (stop instanceof Expression) {
-        args.push(stop.build());
+        args.push(stop.forge());
       } else {
         args.push(stop);
       }
@@ -444,38 +444,38 @@ export class Expression {
 
   // Type system expressions
   static coalesce(...values: (Expression | ExpressionSpecification | any)[]): Expression {
-    const args = ['coalesce', ...values.map((v) => (v instanceof Expression ? v.build() : v))];
+    const args = ['coalesce', ...values.map((v) => (v instanceof Expression ? v.forge() : v))];
     return new Expression(args as ExpressionSpecification);
   }
 
   // Mathematical operations
   static add(...values: (number | Expression)[]): Expression {
-    const args = ['+', ...values.map((v) => (v instanceof Expression ? v.build() : v))];
+    const args = ['+', ...values.map((v) => (v instanceof Expression ? v.forge() : v))];
     return new Expression(args as ExpressionSpecification);
   }
 
   static subtract(a: number | Expression, b: number | Expression): Expression {
-    return new Expression(['-', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
+    return new Expression(['-', a instanceof Expression ? a.forge() : a, b instanceof Expression ? b.forge() : b]);
   }
 
   static multiply(...values: (number | Expression)[]): Expression {
-    const args = ['*', ...values.map((v) => (v instanceof Expression ? v.build() : v))];
+    const args = ['*', ...values.map((v) => (v instanceof Expression ? v.forge() : v))];
     return new Expression(args as ExpressionSpecification);
   }
 
   static divide(a: number | Expression, b: number | Expression): Expression {
-    return new Expression(['/', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
+    return new Expression(['/', a instanceof Expression ? a.forge() : a, b instanceof Expression ? b.forge() : b]);
   }
 
   static mod(a: number | Expression, b: number | Expression): Expression {
-    return new Expression(['%', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
+    return new Expression(['%', a instanceof Expression ? a.forge() : a, b instanceof Expression ? b.forge() : b]);
   }
 
   static pow(base: number | Expression, exponent: number | Expression): Expression {
     return new Expression([
       '^',
-      base instanceof Expression ? base.build() : base,
-      exponent instanceof Expression ? exponent.build() : exponent,
+      base instanceof Expression ? base.forge() : base,
+      exponent instanceof Expression ? exponent.forge() : exponent,
     ]);
   }
 
@@ -494,76 +494,76 @@ export class Expression {
 
   // Comparison operations
   static eq(a: any, b: any): Expression {
-    return new Expression(['==', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
+    return new Expression(['==', a instanceof Expression ? a.forge() : a, b instanceof Expression ? b.forge() : b]);
   }
 
   static neq(a: any, b: any): Expression {
-    return new Expression(['!=', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
+    return new Expression(['!=', a instanceof Expression ? a.forge() : a, b instanceof Expression ? b.forge() : b]);
   }
 
   static gt(a: number | Expression, b: number | Expression): Expression {
-    return new Expression(['>', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
+    return new Expression(['>', a instanceof Expression ? a.forge() : a, b instanceof Expression ? b.forge() : b]);
   }
 
   static gte(a: number | Expression, b: number | Expression): Expression {
-    return new Expression(['>=', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
+    return new Expression(['>=', a instanceof Expression ? a.forge() : a, b instanceof Expression ? b.forge() : b]);
   }
 
   static lt(a: number | Expression, b: number | Expression): Expression {
-    return new Expression(['<', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
+    return new Expression(['<', a instanceof Expression ? a.forge() : a, b instanceof Expression ? b.forge() : b]);
   }
 
   static lte(a: number | Expression, b: number | Expression): Expression {
-    return new Expression(['<=', a instanceof Expression ? a.build() : a, b instanceof Expression ? b.build() : b]);
+    return new Expression(['<=', a instanceof Expression ? a.forge() : a, b instanceof Expression ? b.forge() : b]);
   }
 
   // Logical operations
   static and(...conditions: (boolean | Expression)[]): Expression {
-    const args = ['all', ...conditions.map((c) => (c instanceof Expression ? c.build() : c))];
+    const args = ['all', ...conditions.map((c) => (c instanceof Expression ? c.forge() : c))];
     return new Expression(args as ExpressionSpecification);
   }
 
   static or(...conditions: (boolean | Expression)[]): Expression {
-    const args = ['any', ...conditions.map((c) => (c instanceof Expression ? c.build() : c))];
+    const args = ['any', ...conditions.map((c) => (c instanceof Expression ? c.forge() : c))];
     return new Expression(args as ExpressionSpecification);
   }
 
   static not(condition: boolean | Expression): Expression {
-    return new Expression(['!', condition instanceof Expression ? condition.build() : condition]);
+    return new Expression(['!', condition instanceof Expression ? condition.forge() : condition]);
   }
 
   // Type conversion
   static toNumber(value: Expression | string | number): Expression {
-    return new Expression(['to-number', value instanceof Expression ? value.build() : value]);
+    return new Expression(['to-number', value instanceof Expression ? value.forge() : value]);
   }
 
   static toString(value: Expression | any): Expression {
-    return new Expression(['to-string', value instanceof Expression ? value.build() : value]);
+    return new Expression(['to-string', value instanceof Expression ? value.forge() : value]);
   }
 
   static toBoolean(value: Expression | any): Expression {
-    return new Expression(['to-boolean', value instanceof Expression ? value.build() : value]);
+    return new Expression(['to-boolean', value instanceof Expression ? value.forge() : value]);
   }
 
   static toColor(value: Expression | string | any): Expression {
-    return new Expression(['to-color', value instanceof Expression ? value.build() : value]);
+    return new Expression(['to-color', value instanceof Expression ? value.forge() : value]);
   }
 
   // Type assertions
   static string(value: Expression | any): Expression {
-    return new Expression(['string', value instanceof Expression ? value.build() : value]);
+    return new Expression(['string', value instanceof Expression ? value.forge() : value]);
   }
 
   static number(value: Expression | any): Expression {
-    return new Expression(['number', value instanceof Expression ? value.build() : value]);
+    return new Expression(['number', value instanceof Expression ? value.forge() : value]);
   }
 
   static boolean(value: Expression | any): Expression {
-    return new Expression(['boolean', value instanceof Expression ? value.build() : value]);
+    return new Expression(['boolean', value instanceof Expression ? value.forge() : value]);
   }
 
   static array(value: Expression | any, itemType?: string): Expression {
-    const args: any[] = ['array', value instanceof Expression ? value.build() : value];
+    const args: any[] = ['array', value instanceof Expression ? value.forge() : value];
     if (itemType) {
       args.splice(1, 0, itemType);
     }
@@ -571,11 +571,11 @@ export class Expression {
   }
 
   static object(value: Expression | any): Expression {
-    return new Expression(['object', value instanceof Expression ? value.build() : value]);
+    return new Expression(['object', value instanceof Expression ? value.forge() : value]);
   }
 
   static typeof(value: Expression | any): Expression {
-    return new Expression(['typeof', value instanceof Expression ? value.build() : value]);
+    return new Expression(['typeof', value instanceof Expression ? value.forge() : value]);
   }
 
   // Advanced type expressions
@@ -590,17 +590,17 @@ export class Expression {
       if (options['case-sensitive'] !== undefined) {
         collatorOptions['case-sensitive'] =
           options['case-sensitive'] instanceof Expression
-            ? options['case-sensitive'].build()
+            ? options['case-sensitive'].forge()
             : options['case-sensitive'];
       }
       if (options['diacritic-sensitive'] !== undefined) {
         collatorOptions['diacritic-sensitive'] =
           options['diacritic-sensitive'] instanceof Expression
-            ? options['diacritic-sensitive'].build()
+            ? options['diacritic-sensitive'].forge()
             : options['diacritic-sensitive'];
       }
       if (options.locale !== undefined) {
-        collatorOptions.locale = options.locale instanceof Expression ? options.locale.build() : options.locale;
+        collatorOptions.locale = options.locale instanceof Expression ? options.locale.forge() : options.locale;
       }
       args.push(collatorOptions);
     }
@@ -623,7 +623,7 @@ export class Expression {
     const args: any[] = ['format'];
     for (const section of sections) {
       if (typeof section === 'string' || section instanceof Expression) {
-        args.push(section instanceof Expression ? section.build() : section);
+        args.push(section instanceof Expression ? section.forge() : section);
       } else if (section && typeof section === 'object' && !Array.isArray(section)) {
         // This is a formatted section object
         const formatSection = section as {
@@ -636,19 +636,19 @@ export class Expression {
         if (formatSection['font-scale'] !== undefined) {
           formattedSection['font-scale'] =
             formatSection['font-scale'] instanceof Expression
-              ? formatSection['font-scale'].build()
+              ? formatSection['font-scale'].forge()
               : formatSection['font-scale'];
         }
         if (formatSection['text-font'] !== undefined) {
           formattedSection['text-font'] =
             formatSection['text-font'] instanceof Expression
-              ? formatSection['text-font'].build()
+              ? formatSection['text-font'].forge()
               : formatSection['text-font'];
         }
         if (formatSection['text-color'] !== undefined) {
           formattedSection['text-color'] =
             formatSection['text-color'] instanceof Expression
-              ? formatSection['text-color'].build()
+              ? formatSection['text-color'].forge()
               : formatSection['text-color'];
         }
         if (formatSection['vertical-align'] !== undefined) {
@@ -662,16 +662,16 @@ export class Expression {
 
   // String operations
   static concat(...values: (string | Expression)[]): Expression {
-    const args = ['concat', ...values.map((v) => (v instanceof Expression ? v.build() : v))];
+    const args = ['concat', ...values.map((v) => (v instanceof Expression ? v.forge() : v))];
     return new Expression(args as ExpressionSpecification);
   }
 
   static downcase(value: string | Expression): Expression {
-    return new Expression(['downcase', value instanceof Expression ? value.build() : value]);
+    return new Expression(['downcase', value instanceof Expression ? value.forge() : value]);
   }
 
   static upcase(value: string | Expression): Expression {
-    return new Expression(['upcase', value instanceof Expression ? value.build() : value]);
+    return new Expression(['upcase', value instanceof Expression ? value.forge() : value]);
   }
 
   // ============================================================================
@@ -710,107 +710,107 @@ export class Expression {
 
   // Mathematical operations as chainable methods
   add(...values: (number | Expression | ExpressionSpecification)[]): Expression {
-    const args = ['+', this.build(), ...values.map((v) => (v instanceof Expression ? v.build() : v))];
+    const args = ['+', this.forge(), ...values.map((v) => (v instanceof Expression ? v.forge() : v))];
     return new Expression(args as ExpressionSpecification);
   }
 
   subtract(value: number | Expression | ExpressionSpecification): Expression {
-    return new Expression(['-', this.build(), value instanceof Expression ? value.build() : value]);
+    return new Expression(['-', this.forge(), value instanceof Expression ? value.forge() : value]);
   }
 
   multiply(...values: (number | Expression | ExpressionSpecification)[]): Expression {
-    const args = ['*', this.build(), ...values.map((v) => (v instanceof Expression ? v.build() : v))];
+    const args = ['*', this.forge(), ...values.map((v) => (v instanceof Expression ? v.forge() : v))];
     return new Expression(args as ExpressionSpecification);
   }
 
   divide(value: number | Expression | ExpressionSpecification): Expression {
-    return new Expression(['/', this.build(), value instanceof Expression ? value.build() : value]);
+    return new Expression(['/', this.forge(), value instanceof Expression ? value.forge() : value]);
   }
 
   mod(value: number | Expression | ExpressionSpecification): Expression {
-    return new Expression(['%', this.build(), value instanceof Expression ? value.build() : value]);
+    return new Expression(['%', this.forge(), value instanceof Expression ? value.forge() : value]);
   }
 
   pow(exponent: number | Expression | ExpressionSpecification): Expression {
-    return new Expression(['^', this.build(), exponent instanceof Expression ? exponent.build() : exponent]);
+    return new Expression(['^', this.forge(), exponent instanceof Expression ? exponent.forge() : exponent]);
   }
 
   sqrt(): Expression {
-    return new Expression(['sqrt', this.build()]);
+    return new Expression(['sqrt', this.forge()]);
   }
 
   log10(): Expression {
-    return new Expression(['log10', this.build()]);
+    return new Expression(['log10', this.forge()]);
   }
 
   // Comparison operations as chainable methods
   eq(value: Expression | ExpressionSpecification | any): Expression {
-    return new Expression(['==', this.build(), value instanceof Expression ? value.build() : value]);
+    return new Expression(['==', this.forge(), value instanceof Expression ? value.forge() : value]);
   }
 
   neq(value: Expression | ExpressionSpecification | any): Expression {
-    return new Expression(['!=', this.build(), value instanceof Expression ? value.build() : value]);
+    return new Expression(['!=', this.forge(), value instanceof Expression ? value.forge() : value]);
   }
 
   gt(value: number | Expression | ExpressionSpecification): Expression {
-    return new Expression(['>', this.build(), value instanceof Expression ? value.build() : value]);
+    return new Expression(['>', this.forge(), value instanceof Expression ? value.forge() : value]);
   }
 
   gte(value: number | Expression | ExpressionSpecification): Expression {
-    return new Expression(['>=', this.build(), value instanceof Expression ? value.build() : value]);
+    return new Expression(['>=', this.forge(), value instanceof Expression ? value.forge() : value]);
   }
 
   lt(value: number | Expression | ExpressionSpecification): Expression {
-    return new Expression(['<', this.build(), value instanceof Expression ? value.build() : value]);
+    return new Expression(['<', this.forge(), value instanceof Expression ? value.forge() : value]);
   }
 
   lte(value: number | Expression | ExpressionSpecification): Expression {
-    return new Expression(['<=', this.build(), value instanceof Expression ? value.build() : value]);
+    return new Expression(['<=', this.forge(), value instanceof Expression ? value.forge() : value]);
   }
 
   // Logical operations as chainable methods
   and(...conditions: (boolean | Expression | ExpressionSpecification)[]): Expression {
-    const args = ['all', this.build(), ...conditions.map((c) => (c instanceof Expression ? c.build() : c))];
+    const args = ['all', this.forge(), ...conditions.map((c) => (c instanceof Expression ? c.forge() : c))];
     return new Expression(args as ExpressionSpecification);
   }
 
   or(...conditions: (boolean | Expression | ExpressionSpecification)[]): Expression {
-    const args = ['any', this.build(), ...conditions.map((c) => (c instanceof Expression ? c.build() : c))];
+    const args = ['any', this.forge(), ...conditions.map((c) => (c instanceof Expression ? c.forge() : c))];
     return new Expression(args as ExpressionSpecification);
   }
 
   // Type conversion as chainable methods
   toNumber(): Expression {
-    return new Expression(['to-number', this.build()]);
+    return new Expression(['to-number', this.forge()]);
   }
 
   toString(): Expression {
-    return new Expression(['to-string', this.build()]);
+    return new Expression(['to-string', this.forge()]);
   }
 
   toBoolean(): Expression {
-    return new Expression(['to-boolean', this.build()]);
+    return new Expression(['to-boolean', this.forge()]);
   }
 
   toColor(): Expression {
-    return new Expression(['to-color', this.build()]);
+    return new Expression(['to-color', this.forge()]);
   }
 
   // Type assertions as chainable methods
   string(): Expression {
-    return new Expression(['string', this.build()]);
+    return new Expression(['string', this.forge()]);
   }
 
   number(): Expression {
-    return new Expression(['number', this.build()]);
+    return new Expression(['number', this.forge()]);
   }
 
   boolean(): Expression {
-    return new Expression(['boolean', this.build()]);
+    return new Expression(['boolean', this.forge()]);
   }
 
   array(itemType?: string): Expression {
-    const args: any[] = ['array', this.build()];
+    const args: any[] = ['array', this.forge()];
     if (itemType) {
       args.splice(1, 0, itemType);
     }
@@ -818,16 +818,16 @@ export class Expression {
   }
 
   object(): Expression {
-    return new Expression(['object', this.build()]);
+    return new Expression(['object', this.forge()]);
   }
 
   typeof(): Expression {
-    return new Expression(['typeof', this.build()]);
+    return new Expression(['typeof', this.forge()]);
   }
 
   // Advanced type expressions as chainable methods
   image(): Expression {
-    return new Expression(['image', this.build()]);
+    return new Expression(['image', this.forge()]);
   }
 
   numberFormat(options?: {
@@ -836,25 +836,25 @@ export class Expression {
     'min-fraction-digits'?: number | Expression | ExpressionSpecification;
     'max-fraction-digits'?: number | Expression | ExpressionSpecification;
   }): Expression {
-    const args: any[] = ['number-format', this.build()];
+    const args: any[] = ['number-format', this.forge()];
     if (options) {
       const formatOptions: any = {};
       if (options.locale !== undefined) {
-        formatOptions.locale = options.locale instanceof Expression ? options.locale.build() : options.locale;
+        formatOptions.locale = options.locale instanceof Expression ? options.locale.forge() : options.locale;
       }
       if (options.currency !== undefined) {
-        formatOptions.currency = options.currency instanceof Expression ? options.currency.build() : options.currency;
+        formatOptions.currency = options.currency instanceof Expression ? options.currency.forge() : options.currency;
       }
       if (options['min-fraction-digits'] !== undefined) {
         formatOptions['min-fraction-digits'] =
           options['min-fraction-digits'] instanceof Expression
-            ? options['min-fraction-digits'].build()
+            ? options['min-fraction-digits'].forge()
             : options['min-fraction-digits'];
       }
       if (options['max-fraction-digits'] !== undefined) {
         formatOptions['max-fraction-digits'] =
           options['max-fraction-digits'] instanceof Expression
-            ? options['max-fraction-digits'].build()
+            ? options['max-fraction-digits'].forge()
             : options['max-fraction-digits'];
       }
       args.push(formatOptions);
@@ -863,58 +863,58 @@ export class Expression {
   }
 
   resolvedLocale(): Expression {
-    return new Expression(['resolved-locale', this.build()] as ExpressionSpecification);
+    return new Expression(['resolved-locale', this.forge()] as ExpressionSpecification);
   }
 
   isSupportedScript(): Expression {
-    return new Expression(['is-supported-script', this.build()]);
+    return new Expression(['is-supported-script', this.forge()]);
   }
 
   // String operations as chainable methods
   concat(...values: (string | Expression | ExpressionSpecification)[]): Expression {
-    const args = ['concat', this.build(), ...values.map((v) => (v instanceof Expression ? v.build() : v))];
+    const args = ['concat', this.forge(), ...values.map((v) => (v instanceof Expression ? v.forge() : v))];
     return new Expression(args as ExpressionSpecification);
   }
 
   downcase(): Expression {
-    return new Expression(['downcase', this.build()]);
+    return new Expression(['downcase', this.forge()]);
   }
 
   upcase(): Expression {
-    return new Expression(['upcase', this.build()]);
+    return new Expression(['upcase', this.forge()]);
   }
 
   // Lookup operations as chainable methods
   length(): Expression {
-    return new Expression(['length', this.build()]);
+    return new Expression(['length', this.forge()]);
   }
 
   at(index: number | Expression | ExpressionSpecification): Expression {
-    return new Expression(['at', index instanceof Expression ? index.build() : index, this.build()]);
+    return new Expression(['at', index instanceof Expression ? index.forge() : index, this.forge()]);
   }
 
   slice(
     start: number | Expression | ExpressionSpecification,
     end?: number | Expression | ExpressionSpecification,
   ): Expression {
-    const args: any[] = ['slice', this.build(), start instanceof Expression ? start.build() : start];
+    const args: any[] = ['slice', this.forge(), start instanceof Expression ? start.forge() : start];
     if (end !== undefined) {
-      args.push(end instanceof Expression ? end.build() : end);
+      args.push(end instanceof Expression ? end.forge() : end);
     }
     return new Expression(args as ExpressionSpecification);
   }
 
   in(collection: string | Expression | ExpressionSpecification): Expression {
-    return new Expression(['in', this.build(), collection instanceof Expression ? collection.build() : collection]);
+    return new Expression(['in', this.forge(), collection instanceof Expression ? collection.forge() : collection]);
   }
 
   indexOf(
     item: any | Expression | ExpressionSpecification,
     fromIndex?: number | Expression | ExpressionSpecification,
   ): Expression {
-    const args: any[] = ['index-of', item instanceof Expression ? item.build() : item, this.build()];
+    const args: any[] = ['index-of', item instanceof Expression ? item.forge() : item, this.forge()];
     if (fromIndex !== undefined) {
-      args.push(fromIndex instanceof Expression ? fromIndex.build() : fromIndex);
+      args.push(fromIndex instanceof Expression ? fromIndex.forge() : fromIndex);
     }
     return new Expression(args as ExpressionSpecification);
   }
@@ -924,20 +924,20 @@ export class Expression {
     interpolation: InterpolationSpecification,
     ...stops: (number | Expression | ExpressionSpecification | any)[]
   ): Expression {
-    const args = ['interpolate', interpolation, this.build()];
-    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.build() : stop)));
+    const args = ['interpolate', interpolation, this.forge()];
+    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.forge() : stop)));
     return new Expression(args as ExpressionSpecification);
   }
 
   interpolateHcl(...stops: (number | Expression | ExpressionSpecification | any)[]): Expression {
-    const args = ['interpolate-hcl', this.build()];
-    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.build() : stop)));
+    const args = ['interpolate-hcl', this.forge()];
+    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.forge() : stop)));
     return new Expression(args as ExpressionSpecification);
   }
 
   interpolateLab(...stops: (number | Expression | ExpressionSpecification | any)[]): Expression {
-    const args = ['interpolate-lab', this.build()];
-    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.build() : stop)));
+    const args = ['interpolate-lab', this.forge()];
+    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.forge() : stop)));
     return new Expression(args as ExpressionSpecification);
   }
 
@@ -946,14 +946,14 @@ export class Expression {
     min: number | Expression | ExpressionSpecification,
     ...stops: (number | Expression | ExpressionSpecification | any)[]
   ): Expression {
-    const args = ['step', this.build(), min instanceof Expression ? min.build() : min];
-    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.build() : stop)));
+    const args = ['step', this.forge(), min instanceof Expression ? min.forge() : min];
+    args.push(...stops.map((stop) => (stop instanceof Expression ? stop.forge() : stop)));
     return new Expression(args as ExpressionSpecification);
   }
 
   // Type system expressions as chainable methods
   coalesce(...values: (Expression | ExpressionSpecification | any)[]): Expression {
-    const args = ['coalesce', this.build(), ...values.map((v) => (v instanceof Expression ? v.build() : v))];
+    const args = ['coalesce', this.forge(), ...values.map((v) => (v instanceof Expression ? v.forge() : v))];
     return new Expression(args as ExpressionSpecification);
   }
 
@@ -962,7 +962,7 @@ export class Expression {
   distance(geojson: GeoJSON | Expression | ExpressionSpecification): Expression {
     let geojsonExpr: ExpressionSpecification | GeoJSON.GeoJSON;
     if (geojson instanceof Expression) {
-      geojsonExpr = geojson.build();
+      geojsonExpr = geojson.forge();
     } else if (Array.isArray(geojson)) {
       geojsonExpr = geojson;
     } else {
@@ -976,7 +976,7 @@ export class Expression {
   within(geojson: GeoJSON | Expression | ExpressionSpecification): Expression {
     let geojsonExpr: ExpressionSpecification | GeoJSON.GeoJSON;
     if (geojson instanceof Expression) {
-      geojsonExpr = geojson.build();
+      geojsonExpr = geojson.forge();
     } else if (Array.isArray(geojson)) {
       geojsonExpr = geojson;
     } else {
@@ -986,7 +986,7 @@ export class Expression {
   }
 
   // Build the final expression
-  build(): ExpressionSpecification {
+  forge(): ExpressionSpecification {
     return this.expression;
   }
 }
@@ -1012,7 +1012,7 @@ export class Property<T> {
   }
 
   static expression<T>(expression: Expression): Property<T> {
-    return new Property(expression.build() as DataDrivenPropertyValueSpecification<T>);
+    return new Property(expression.forge() as DataDrivenPropertyValueSpecification<T>);
   }
 
   static cameraFunction<T>(fn: CameraFunctionSpecification<T>): Property<T> {
@@ -1043,7 +1043,7 @@ export class Property<T> {
     return Property.expression(expr);
   }
 
-  build(): DataDrivenPropertyValueSpecification<T> {
+  forge(): DataDrivenPropertyValueSpecification<T> {
     return this.value;
   }
 }
@@ -1161,7 +1161,7 @@ export class Layer {
     return this;
   }
 
-  build() {
+  forge() {
     return this.layer;
   }
 }

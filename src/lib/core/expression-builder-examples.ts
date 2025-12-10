@@ -415,8 +415,8 @@ export const propertyBuilders = {
 export const layerBuilders = {
   // Fill layer with data-driven coloring
   fillLayer: new Layer('fill', 'buildings-fill', 'buildings-source', 'buildings')
-    .fillColor(propertyBuilders.fillColor.build())
-    .fillOpacity(propertyBuilders.fillOpacity.build())
+    .fillColor(propertyBuilders.fillColor.forge())
+    .fillOpacity(propertyBuilders.fillOpacity.forge())
     .visibility('visible')
     .minZoom(0)
     .maxZoom(20),
@@ -437,7 +437,7 @@ export const layerBuilders = {
               .fallback('#64748b'),
           )
           .else('#64748b'),
-      ).build(),
+      ).forge(),
     )
     .fillOpacity(0.8)
     .visibility('visible'),
@@ -458,7 +458,7 @@ export const layerBuilders = {
               .fallback('#64748b'),
           )
           .else('#64748b'),
-      ).build(),
+      ).forge(),
     )
     .fillOpacity(0.8)
     .visibility('visible'),
@@ -471,8 +471,8 @@ export const layerBuilders = {
 
   // Line layer with zoom-based styling
   lineLayer: new Layer('line', 'roads-line', 'roads-source', 'roads')
-    .lineColor(Property.literal('#666666').build())
-    .lineWidth(propertyBuilders.lineWidth.build())
+    .lineColor(Property.literal('#666666').forge())
+    .lineWidth(propertyBuilders.lineWidth.forge())
     .visibility('visible'),
 
   // Symbol layer with text
@@ -484,8 +484,8 @@ export const layerBuilders = {
 
   // Complex layer with filters
   filteredLayer: new Layer('fill', 'filtered-fill', 'data-source', 'layer')
-    .fillColor(propertyBuilders.fillColor.build())
-    .filter(Expression.and(Expression.has('id'), Expression.gt(Expression.get('area'), 1000)).build())
+    .fillColor(propertyBuilders.fillColor.forge())
+    .filter(Expression.and(Expression.has('id'), Expression.gt(Expression.get('area'), 1000)).forge())
     .visibility('visible'),
 };
 

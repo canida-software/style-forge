@@ -8,7 +8,7 @@ describe('Layer Builder - Basic Layer Creation', () => {
       .fillOpacity(0.8)
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.id).toBe('buildings-fill');
     expect(result.type).toBe('fill');
     expect(result.source).toBe('buildings-source');
@@ -23,7 +23,7 @@ describe('Layer Builder - Basic Layer Creation', () => {
       .circleRadius(5)
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.type).toBe('circle');
     expect(result.id).toBe('points-circle');
     expect(result.source).toBe('points-source');
@@ -36,7 +36,7 @@ describe('Layer Builder - Basic Layer Creation', () => {
       .lineWidth(2)
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.type).toBe('line');
     expect(result.id).toBe('roads-line');
     expect(result['source-layer']).toBe('roads');
@@ -51,10 +51,10 @@ describe('Layer Builder - Data-Driven Properties', () => {
       .fallback('#9e9e9e');
 
     const layer = new Layer('fill', 'buildings-fill', 'buildings-source', 'buildings')
-      .fillColor(colorByCategory.build())
+      .fillColor(colorByCategory.forge())
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.paint['fill-color']).toEqual([
       'match',
       ['get', 'category'],
@@ -74,11 +74,11 @@ describe('Layer Builder - Data-Driven Properties', () => {
       .else(5);
 
     const layer = new Layer('circle', 'earthquakes', 'earthquake-source')
-      .circleRadius(radiusByMagnitude.build())
+      .circleRadius(radiusByMagnitude.forge())
       .circleColor('#ff0000')
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.type).toBe('circle');
     expect(result.id).toBe('earthquakes');
     expect(result.source).toBe('earthquake-source');
@@ -90,11 +90,11 @@ describe('Layer Builder - Data-Driven Properties', () => {
     const widthByZoom = interpolate(['linear'], zoom(), 0, 1, 20, 5);
 
     const layer = new Layer('line', 'roads-line', 'roads-source', 'roads')
-      .lineWidth(widthByZoom.build())
+      .lineWidth(widthByZoom.forge())
       .lineColor('#666666')
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.paint['line-width']).toEqual(['interpolate', ['linear'], ['zoom'], 0, 1, 20, 5]);
   });
 });
@@ -114,11 +114,11 @@ describe('Layer Builder - Complex Layer Configurations', () => {
       .else(5);
 
     const layer = new Layer('circle', 'earthquakes', 'earthquake-source')
-      .circleColor(colorByMagnitude.build())
-      .circleRadius(sizeByMagnitude.build())
+      .circleColor(colorByMagnitude.forge())
+      .circleRadius(sizeByMagnitude.forge())
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.type).toBe('circle');
     expect(result.id).toBe('earthquakes');
 
@@ -157,13 +157,13 @@ describe('Layer Builder - Complex Layer Configurations', () => {
     const adaptiveOpacity = interpolate(['linear'], zoom(), 10, 0.3, 18, 0.9);
 
     const layer = new Layer('fill', 'buildings-advanced', 'buildings-source', 'buildings')
-      .fillColor(advancedColorPalette.build())
-      .fillOpacity(adaptiveOpacity.build())
+      .fillColor(advancedColorPalette.forge())
+      .fillOpacity(adaptiveOpacity.forge())
       .visibility('visible')
       .minZoom(8)
       .maxZoom(20);
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.type).toBe('fill');
     expect(result.id).toBe('buildings-advanced');
     expect(result.minzoom).toBe(8);
@@ -189,7 +189,7 @@ describe('Layer Builder - Layer Properties and Filters', () => {
       .maxZoom(15)
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.minzoom).toBe(5);
     expect(result.maxzoom).toBe(15);
   });
@@ -199,10 +199,10 @@ describe('Layer Builder - Layer Properties and Filters', () => {
 
     const layer = new Layer('fill', 'filtered-layer', 'data-source', 'layer')
       .fillColor('#ff0000')
-      .filter(filterExpr.build())
+      .filter(filterExpr.forge())
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.filter).toEqual(['case', ['has', 'id'], true, false]);
   });
 
@@ -213,7 +213,7 @@ describe('Layer Builder - Layer Properties and Filters', () => {
       .visibility('visible')
       .minZoom(10);
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result.type).toBe('symbol');
     expect(result.layout).toEqual({ 'text-field': ['get', 'name'], 'text-size': 12, visibility: 'visible' });
     expect(result.minzoom).toBe(10);
@@ -226,7 +226,7 @@ describe('Layer Builder - Layer Validation', () => {
       .fillColor('#ff0000')
       .visibility('visible');
 
-    const result = layer.build();
+    const result = layer.forge();
 
     // Basic layer structure validation
     expect(result).toHaveProperty('id');
@@ -240,7 +240,7 @@ describe('Layer Builder - Layer Validation', () => {
   it('should handle layers without source-layer', () => {
     const layer = new Layer('circle', 'points', 'points-source').circleColor('#ff0000').circleRadius(5);
 
-    const result = layer.build();
+    const result = layer.forge();
     expect(result).not.toHaveProperty('source-layer');
     expect(result.source).toBe('points-source');
   });

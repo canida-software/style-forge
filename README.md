@@ -122,9 +122,9 @@ const earthquakeLayerJson = {
 
 // Style Forge
 const earthquakeLayer = new Layer('circle', 'earthquakes', 'earthquake-source')
-  .circleColor(colorByCategory.build())
-  .circleRadius(sizeByMagnitude.build())
-  .circleOpacity(opacityByZoom.build())
+  .circleColor(colorByCategory.forge())
+  .circleRadius(sizeByMagnitude.forge())
+  .circleOpacity(opacityByZoom.forge())
   .visibility('visible');
 
 // ---------------------------------------------------------------------------
@@ -184,7 +184,7 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
           .fallback('#64748b'),
       )
       .else('#64748b')
-      .build(),
+      .forge(),
   )
   .fillOpacity(0.8)
   .visibility('visible');
