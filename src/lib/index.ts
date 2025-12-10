@@ -13,6 +13,7 @@ export type { VarBindings } from './core/expression-builder.js';
 export { Layer } from './core/expression-builder.js';
 
 // Direct exports for ergonomic usage without Expression. prefix
+export const fx = Expression; // Alias for Expression
 export const get = Expression.get;
 export const has = Expression.has;
 export const zoom = Expression.zoom;
@@ -28,7 +29,7 @@ export const conditional = Expression.conditional; // alias for when
 export const match = Expression.match;
 
 // Variable binding expressions
-export const $let = Expression.let;
+export const $let = Expression.$let;
 export const $var = Expression.var;
 
 // Mathematical operations

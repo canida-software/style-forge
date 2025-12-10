@@ -16,20 +16,22 @@ npm install @maplibre/maplibre-gl-style-spec
 
 ## API Philosophy
 
-**🎯 Fluent API First** – The fluent, chainable API is the recommended way to use Style Forge. Static helpers are kept for compatibility, but new code should prefer the fluent style.
+**🎯 Fluent API First** – The fluent, chainable API is the recommended way to use Style Forge.
 
 ```typescript
 // MapLibre JSON
 const highlightColorJson = ['case', ['has', 'isSelected'], '#f97316', '#9ca3af'];
 
 // Style Forge
-const highlightColor = when(has('isSelected')).then('#f97316').else('#9ca3af');
+const highlightColor = fx.when(fx.has('isSelected')).then('#f97316').else('#9ca3af');
 ```
+
+**Direct imports** like `get`, `has`, `when` are available as convenient shorthands.
 
 ## Usage
 
 ```typescript
-import { get, has, match, interpolate, when, zoom, Layer, $let, $var } from 'style-forge';
+import { fx } from 'style-forge';
 
 // ---------------------------------------------------------------------------
 // Example 1: Category-based color
@@ -51,7 +53,8 @@ const colorByCategoryJson = [
 ];
 
 // Style Forge
-const colorByCategory = get('category')
+const colorByCategory = fx
+  .get('category')
   .match({ residential: '#ffeb3b', commercial: '#2196f3', industrial: '#f44336', recreational: '#4caf50' })
   .fallback('#9e9e9e');
 
@@ -63,7 +66,7 @@ const colorByCategory = get('category')
 const opacityByZoomJson = ['interpolate', ['linear'], ['zoom'], 0, 0.1, 10, 0.5, 20, 1.0];
 
 // Style Forge
-const opacityByZoom = interpolate(['linear'], zoom(), 0, 0.1, 10, 0.5, 20, 1.0);
+const opacityByZoom = fx.interpolate(['linear'], fx.zoom(), 0, 0.1, 10, 0.5, 20, 1.0);
 
 // ---------------------------------------------------------------------------
 // Example 3: Conditional size by magnitude
@@ -78,8 +81,9 @@ const sizeByMagnitudeJson = [
 ];
 
 // Style Forge
-const sizeByMagnitude = when(get('magnitude').gte(5))
-  .then(interpolate(['exponential', 2], get('magnitude'), 5, 10, 10, 50))
+const sizeByMagnitude = fx
+  .when(fx.get('magnitude').gte(5))
+  .then(fx.interpolate(['exponential', 2], fx.get('magnitude'), 5, 10, 10, 50))
   .else(5);
 
 // ---------------------------------------------------------------------------
@@ -120,14 +124,14 @@ const scaledDensityJson = [
 ];
 
 // Style Forge - Functional syntax (recommended for complex expressions)
-const scaledDensity = $let({ pop: get('population'), area: get('area') }, ({ $var }) =>
+const scaledDensity = fx.$let({ pop: fx.get('population'), area: fx.get('area') }, ({ $var }) =>
   $var.pop.divide($var.area).multiply(100),
 );
 
 // Style Forge - Builder syntax (simpler cases)
-const scaledDensityBuilder = $let({ pop: get('population'), area: get('area') }).in(
-  $var('pop').divide($var('area')).multiply(100),
-);
+const scaledDensityBuilder = fx
+  .$let({ pop: fx.get('population'), area: fx.get('area') })
+  .in(fx.var('pop').divide(fx.var('area')).multiply(100));
 
 // ---------------------------------------------------------------------------
 // Example 6: Complex adaptive sizing with let
@@ -154,9 +158,12 @@ const adaptiveSizeJson = [
   ],
 ];
 
-// Style Forge - Functional syntax shines for complex expressions
+// Direct import shorthand - convenient alternative to fx
+import { get, when, interpolate, $let } from 'style-forge';
+
+// Style Forge's functional syntax shines for complex expressions
 const adaptiveSize = $let(
-  {
+  { 
     magnitude: get('magnitude'),
     zoom: get('zoom'),
     baseSize: 8,
@@ -202,10 +209,14 @@ const paletteColorJson = [
 ];
 
 // Style Forge
+import { get, has, when } from 'style-forge';
+
 const paletteColor = when(has('id'))
   .then(
-    match(get('id').toNumber().mod(palette.length))
-      .branches(Object.fromEntries(palette.map((color, index) => [index, color] as const)))
+    get('id')
+      .toNumber()
+      .mod(palette.length)
+      .match(Object.fromEntries(palette.map((color, index) => [index, color] as const)))
       .fallback('#64748b'),
   )
   .else('#64748b');
@@ -236,8 +247,8 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 
 **Variable Bindings**
 
-- `$let(bindings)` / `Expression.let(bindings)` – scoped variable bindings using MapLibre `let` (builder syntax).
-- `$let(bindings, callback)` / `Expression.let(bindings, callback)` – functional syntax for complex expressions.
+- `$let(bindings)` / `Expression.$let(bindings)` – scoped variable bindings using MapLibre `$let` (builder syntax).
+- `$let(bindings, callback)` / `Expression.$let(bindings, callback)` – functional syntax for complex expressions.
 - `$var(name)` / `Expression.var(name)` – reference a bound variable.
 
 **Mathematics & Constants**

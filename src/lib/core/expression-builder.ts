@@ -362,12 +362,12 @@ export class Expression {
     }
   }
 
-  static let<T extends Record<string, Expression | ExpressionSpecification | any>>(bindings: T): LetBuilder;
-  static let<T extends Record<string, Expression | ExpressionSpecification | any>>(
+  static $let<T extends Record<string, Expression | ExpressionSpecification | any>>(bindings: T): LetBuilder;
+  static $let<T extends Record<string, Expression | ExpressionSpecification | any>>(
     bindings: T,
     varFn: (boundVars: T & { $var: Record<keyof T, Expression> }) => Expression,
   ): Expression;
-  static let<T extends Record<string, Expression | ExpressionSpecification | any>>(
+  static $let<T extends Record<string, Expression | ExpressionSpecification | any>>(
     bindings: T,
     varFn?: (boundVars: T & { $var: Record<keyof T, Expression> }) => Expression,
   ): LetBuilder | Expression {
@@ -401,6 +401,7 @@ export class Expression {
       return new LetBuilder(bindings);
     }
   }
+
   static match(input: Expression | ExpressionSpecification): MatchBuilder;
   static match(
     input: Expression | ExpressionSpecification,
