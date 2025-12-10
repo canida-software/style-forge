@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -59,9 +61,30 @@ jobs:
           fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
           NODE
 
-      - name: Deploy to dist branch
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          folder: deploy
-          branch: dist
-          clean: true
+      - name: Push dist branch and tag for this release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.ref_name }}      # e.g. v0.1.5
+          REPO: ${{ github.repository }}        # e.g. canida-software/style-forge
+        run: |
+          cd deploy
+
+          # Init a tiny one-branch repo containing only the built artifacts
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          git commit -m "build: ${TAG_NAME}"
+
+          # Keep 'dist' as the moving latest-build branch
+          git branch -M dist
+
+          # Create an immutable tag for this build
+          DIST_TAG="dist-${TAG_NAME}"           # e.g. dist-v0.1.5
+          git tag "${DIST_TAG}"
+
+          # Push branch and tag to the main repo
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${REPO}.git"
+          git push --force origin dist
+          git push origin "${DIST_TAG}"
