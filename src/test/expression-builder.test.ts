@@ -31,6 +31,8 @@ import {
   upcase,
   downcase,
   globalState,
+  featureState,
+  geometryType,
   collator,
   format,
   $let,
@@ -53,6 +55,22 @@ describe('Expression Builder - Basic Expressions', () => {
   it('should create zoom expressions', () => {
     const expr = zoom();
     expect(expr.forge()).toEqual(['zoom']);
+  });
+
+  it('should create featureState expressions', () => {
+    const expr = featureState('hover');
+    expect(expr.forge()).toEqual(['feature-state', 'hover']);
+    expect(globalThis.testUtils.validateExpression(expr.forge())).toBe(true);
+  });
+
+  it('should create geometryType expressions', () => {
+    const expr = geometryType();
+    expect(expr.forge()).toEqual(['geometry-type']);
+  });
+
+  it('should compare geometryType expressions', () => {
+    const expr = geometryType().eq('Polygon');
+    expect(expr.forge()).toEqual(['==', ['geometry-type'], 'Polygon']);
   });
 
   it('should create literal expressions', () => {
@@ -308,6 +326,30 @@ describe('Expression Builder - Type System Expressions', () => {
   it('should create object type assertion expressions', () => {
     const expr = object(get('metadata'));
     expect(expr.forge()).toEqual(['object', ['get', 'metadata']]);
+  });
+
+  it('should create type assertion expressions with fallbacks', () => {
+    expect(string(get('name'), get('title'), 'unnamed').forge()).toEqual([
+      'string',
+      ['get', 'name'],
+      ['get', 'title'],
+      'unnamed',
+    ]);
+    expect(number(get('count'), 0).forge()).toEqual(['number', ['get', 'count'], 0]);
+    expect(boolean(get('visible'), false).forge()).toEqual(['boolean', ['get', 'visible'], false]);
+    expect(object(get('metadata'), literal({})).forge()).toEqual(['object', ['get', 'metadata'], ['literal', {}]]);
+  });
+
+  it('should chain type assertions with fallbacks', () => {
+    expect(featureState('selected').boolean(false).forge()).toEqual(['boolean', ['feature-state', 'selected'], false]);
+    expect(featureState('radius').number(get('radius'), 0).forge()).toEqual([
+      'number',
+      ['feature-state', 'radius'],
+      ['get', 'radius'],
+      0,
+    ]);
+    expect(get('label').string('').forge()).toEqual(['string', ['get', 'label'], '']);
+    expect(get('metadata').object(literal({})).forge()).toEqual(['object', ['get', 'metadata'], ['literal', {}]]);
   });
 
   it('should create typeof expressions', () => {

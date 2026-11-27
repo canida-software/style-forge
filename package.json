@@ -5,12 +5,12 @@
   "author": "Quoc Duong Bui",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/canida/style-forge.git"
+    "url": "git+https://github.com/canida-software/style-forge.git"
   },
   "bugs": {
-    "url": "https://github.com/canida/style-forge/issues"
+    "url": "https://github.com/canida-software/style-forge/issues"
   },
-  "homepage": "https://github.com/canida/style-forge#readme",
+  "homepage": "https://github.com/canida-software/style-forge#readme",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
