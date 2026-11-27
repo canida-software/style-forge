@@ -343,6 +343,14 @@ export class Expression {
     return new Expression(['global-state', property]);
   }
 
+  static featureState(property: string): Expression {
+    return new Expression(['feature-state', property]);
+  }
+
+  static geometryType(): Expression {
+    return new Expression(['geometry-type']);
+  }
+
   static elevation(): Expression {
     return new Expression(['elevation']);
   }
@@ -551,17 +559,17 @@ export class Expression {
     return new Expression(['to-color', value instanceof Expression ? value.forge() : value]);
   }
 
-  // Type assertions
-  static string(value: Expression | any): Expression {
-    return new Expression(['string', value instanceof Expression ? value.forge() : value]);
+  // Type assertions, each with fallbacks that are tried in order where a value is of another type
+  static string(value: Expression | any, ...fallbacks: (Expression | ExpressionSpecification | any)[]): Expression {
+    return assertion('string', value, fallbacks);
   }
 
-  static number(value: Expression | any): Expression {
-    return new Expression(['number', value instanceof Expression ? value.forge() : value]);
+  static number(value: Expression | any, ...fallbacks: (Expression | ExpressionSpecification | any)[]): Expression {
+    return assertion('number', value, fallbacks);
   }
 
-  static boolean(value: Expression | any): Expression {
-    return new Expression(['boolean', value instanceof Expression ? value.forge() : value]);
+  static boolean(value: Expression | any, ...fallbacks: (Expression | ExpressionSpecification | any)[]): Expression {
+    return assertion('boolean', value, fallbacks);
   }
 
   static array(value: Expression | any, itemType?: string): Expression {
@@ -572,8 +580,8 @@ export class Expression {
     return new Expression(args as ExpressionSpecification);
   }
 
-  static object(value: Expression | any): Expression {
-    return new Expression(['object', value instanceof Expression ? value.forge() : value]);
+  static object(value: Expression | any, ...fallbacks: (Expression | ExpressionSpecification | any)[]): Expression {
+    return assertion('object', value, fallbacks);
   }
 
   static typeof(value: Expression | any): Expression {
@@ -799,16 +807,16 @@ export class Expression {
   }
 
   // Type assertions as chainable methods
-  string(): Expression {
-    return new Expression(['string', this.forge()]);
+  string(...fallbacks: (Expression | ExpressionSpecification | any)[]): Expression {
+    return assertion('string', this, fallbacks);
   }
 
-  number(): Expression {
-    return new Expression(['number', this.forge()]);
+  number(...fallbacks: (Expression | ExpressionSpecification | any)[]): Expression {
+    return assertion('number', this, fallbacks);
   }
 
-  boolean(): Expression {
-    return new Expression(['boolean', this.forge()]);
+  boolean(...fallbacks: (Expression | ExpressionSpecification | any)[]): Expression {
+    return assertion('boolean', this, fallbacks);
   }
 
   array(itemType?: string): Expression {
@@ -819,8 +827,8 @@ export class Expression {
     return new Expression(args as ExpressionSpecification);
   }
 
-  object(): Expression {
-    return new Expression(['object', this.forge()]);
+  object(...fallbacks: (Expression | ExpressionSpecification | any)[]): Expression {
+    return assertion('object', this, fallbacks);
   }
 
   typeof(): Expression {
@@ -991,6 +999,15 @@ export class Expression {
   forge(): ExpressionSpecification {
     return this.expression;
   }
+}
+
+function assertion(
+  type: 'string' | 'number' | 'boolean' | 'object',
+  value: Expression | any,
+  fallbacks: (Expression | ExpressionSpecification | any)[],
+): Expression {
+  const values = [value, ...fallbacks].map((each) => (each instanceof Expression ? each.forge() : each));
+  return new Expression([type, ...values] as ExpressionSpecification);
 }
 
 // ============================================================================

@@ -237,6 +237,8 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 - `zoom()` – current zoom level.
 - `literal(value)` – literal values.
 - `globalState(key)` – read from global state.
+- `featureState(key)` – read a feature's state, as set with `map.setFeatureState`.
+- `geometryType()` – the feature's geometry type, such as `'Point'` or `'Polygon'`.
 - `elevation()` – terrain elevation expression.
 
 **Conditionals & Match**
@@ -267,6 +269,7 @@ const advancedLayer = new Layer('fill', 'buildings-advanced', 'buildings-source'
 
 - Conversions: `toNumber(value)`, `toString(value)`, `toBoolean(value)`, `toColor(value)` or fluent `expr.toNumber()`, etc.
 - Assertions: `string(value)`, `number(value)`, `boolean(value)`, `array(value)`, `object(value)` or fluent `expr.string()`, `expr.array('string')`, etc.
+- Assertions with fallbacks, tried in order until one is of the type: `boolean(value, ...fallbacks)` or fluent `expr.boolean(...fallbacks)`, and the same for `string`, `number` and `object` – e.g. `featureState('selected').boolean(false)`.
 - Type checks: `typeOf(value)` / fluent `expr.typeof()`.
 - Null handling: `coalesce(...values)` / fluent `expr.coalesce(...)`.
 
